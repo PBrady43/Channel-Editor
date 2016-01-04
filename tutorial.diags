@@ -1,0 +1,521 @@
+##log
+##sources
+<Version>0.27.20141016-1</Version>
+<VideoSource>
+<Id>1</Id>
+<SourceName>EIT</SourceName>
+</VideoSource>
+##multiplex1
+<VideoMultiplex>
+<MplexId>1</MplexId>
+<Frequency>490000000</Frequency>
+<SIStandard>dvb</SIStandard>
+</VideoMultiplex>
+<VideoMultiplex>
+<MplexId>2</MplexId>
+<Frequency>514000000</Frequency>
+<SIStandard>dvb</SIStandard>
+</VideoMultiplex>
+<VideoMultiplex>
+<MplexId>4</MplexId>
+<Frequency>482000000</Frequency>
+<SIStandard>dvb</SIStandard>
+</VideoMultiplex>
+<VideoMultiplex>
+<MplexId>5</MplexId>
+<Frequency>530000000</Frequency>
+<SIStandard>dvb</SIStandard>
+</VideoMultiplex>
+<VideoMultiplex>
+<MplexId>6</MplexId>
+<Frequency>506000000</Frequency>
+<SIStandard>dvb</SIStandard>
+</VideoMultiplex>
+<VideoMultiplex>
+<MplexId>7</MplexId>
+<Frequency>538000000</Frequency>
+<SIStandard>dvb</SIStandard>
+</VideoMultiplex>
+##channels1
+<ChannelInfo>
+<ChanId>1001</ChanId>
+<ChanNum>1</ChanNum>
+<CallSign>BBC ONE Lon</CallSign>
+<ChannelName>BBC ONE Lon</ChannelName>
+<MplexId>1</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1002</ChanId>
+<ChanNum>2</ChanNum>
+<CallSign>BBC TWO</CallSign>
+<ChannelName>BBC TWO</ChannelName>
+<MplexId>1</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1003</ChanId>
+<ChanNum>3</ChanNum>
+<CallSign>ITV</CallSign>
+<ChannelName>ITV</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1004</ChanId>
+<ChanNum>4</ChanNum>
+<CallSign>Channel 4</CallSign>
+<ChannelName>Channel 4</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1005</ChanId>
+<ChanNum>5</ChanNum>
+<CallSign>Channel 5</CallSign>
+<ChannelName>Channel 5</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1006</ChanId>
+<ChanNum>6</ChanNum>
+<CallSign>ITV2</CallSign>
+<ChannelName>ITV2</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1007</ChanId>
+<ChanNum>7</ChanNum>
+<CallSign>BBC THREE</CallSign>
+<ChannelName>BBC THREE</ChannelName>
+<MplexId>1</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1008</ChanId>
+<ChanNum>8</ChanNum>
+<CallSign>London Live</CallSign>
+<ChannelName>London Live</ChannelName>
+<MplexId>7</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1009</ChanId>
+<ChanNum>9</ChanNum>
+<CallSign>BBC FOUR</CallSign>
+<ChannelName>BBC FOUR</ChannelName>
+<MplexId>1</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1010</ChanId>
+<ChanNum>10</ChanNum>
+<CallSign>ITV3</CallSign>
+<ChannelName>ITV3</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1011</ChanId>
+<ChanNum>11</ChanNum>
+<CallSign>Pick</CallSign>
+<ChannelName>Pick something else</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1050</ChanId>
+<ChanNum>11</ChanNum>
+<CallSign>Pick</CallSign>
+<ChannelName>Pick something else</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1012</ChanId>
+<ChanNum>12</ChanNum>
+<CallSign>Dave</CallSign>
+<ChannelName>Dave</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1013</ChanId>
+<ChanNum>13</ChanNum>
+<CallSign>Channel 4+1</CallSign>
+<ChannelName>Channel 4+1</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1014</ChanId>
+<ChanNum>14</ChanNum>
+<CallSign>More 4</CallSign>
+<ChannelName>More 4</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1015</ChanId>
+<ChanNum>15</ChanNum>
+<CallSign>Film4</CallSign>
+<ChannelName>Film4</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1016</ChanId>
+<ChanNum>16</ChanNum>
+<CallSign>QVC</CallSign>
+<ChannelName>QVC</ChannelName>
+<MplexId>6</MplexId>
+<Visible>false</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1017</ChanId>
+<ChanNum>17</ChanNum>
+<CallSign>Really</CallSign>
+<ChannelName>Really</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1018</ChanId>
+<ChanNum>18</ChanNum>
+<CallSign>4Music</CallSign>
+<ChannelName>4Music</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1019</ChanId>
+<ChanNum>19</ChanNum>
+<CallSign>Yesterday</CallSign>
+<ChannelName>Yesterday</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1020</ChanId>
+<ChanNum>20</ChanNum>
+<CallSign>Drama</CallSign>
+<ChannelName>Drama</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1021</ChanId>
+<ChanNum>21</ChanNum>
+<CallSign>5 USA</CallSign>
+<ChannelName>5 USA</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1022</ChanId>
+<ChanNum>22</ChanNum>
+<CallSign>Ideal World</CallSign>
+<ChannelName>Ideal World</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1024</ChanId>
+<ChanNum>24</ChanNum>
+<CallSign>ITV4</CallSign>
+<ChannelName>ITV4</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1025</ChanId>
+<ChanNum>25</ChanNum>
+<CallSign>Dave ja vu</CallSign>
+<ChannelName>Dave ja vu</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1026</ChanId>
+<ChanNum>26</ChanNum>
+<CallSign>ITVBe</CallSign>
+<ChannelName>ITVBe</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1027</ChanId>
+<ChanNum>27</ChanNum>
+<CallSign>ITV2 +1</CallSign>
+<ChannelName>ITV2 +1</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1028</ChanId>
+<ChanNum>28</ChanNum>
+<CallSign>E4</CallSign>
+<ChannelName>E4</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1029</ChanId>
+<ChanNum>29</ChanNum>
+<CallSign>E4+1</CallSign>
+<ChannelName>E4+1</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1030</ChanId>
+<ChanNum>30</ChanNum>
+<CallSign>5*</CallSign>
+<ChannelName>5*</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1031</ChanId>
+<ChanNum>31</ChanNum>
+<CallSign>Spike</CallSign>
+<ChannelName>Spike</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1032</ChanId>
+<ChanNum>32</ChanNum>
+<CallSign>Movie Mix</CallSign>
+<ChannelName>Movie Mix</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1033</ChanId>
+<ChanNum>33</ChanNum>
+<CallSign>ITV +1</CallSign>
+<ChannelName>ITV +1</ChannelName>
+<MplexId>2</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1034</ChanId>
+<ChanNum>34</ChanNum>
+<CallSign>ITV3+1</CallSign>
+<ChannelName>ITV3+1</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1035</ChanId>
+<ChanNum>35</ChanNum>
+<CallSign>QVC Beauty</CallSign>
+<ChannelName>QVC Beauty</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1036</ChanId>
+<ChanNum>36</ChanNum>
+<CallSign>Create &amp; Craft</CallSign>
+<ChannelName>Create &amp; Craft</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1037</ChanId>
+<ChanNum>37</ChanNum>
+<CallSign>QUEST</CallSign>
+<ChannelName>QUEST</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1038</ChanId>
+<ChanNum>38</ChanNum>
+<CallSign>QUEST+1</CallSign>
+<ChannelName>QUEST+1</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1039</ChanId>
+<ChanNum>39</ChanNum>
+<CallSign>The Store</CallSign>
+<ChannelName>The Store</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1040</ChanId>
+<ChanNum>40</ChanNum>
+<CallSign>Rocks &amp; Co 1</CallSign>
+<ChannelName>Rocks &amp; Co 1</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1041</ChanId>
+<ChanNum>41</ChanNum>
+<CallSign>Food Network</CallSign>
+<ChannelName>Food Network</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1042</ChanId>
+<ChanNum>42</ChanNum>
+<CallSign>Travel Channel</CallSign>
+<ChannelName>Travel Channel</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1043</ChanId>
+<ChanNum>43</ChanNum>
+<CallSign>Gems TV</CallSign>
+<ChannelName>Gems TV</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1044</ChanId>
+<ChanNum>44</ChanNum>
+<CallSign>Channel 5+1</CallSign>
+<ChannelName>Channel 5+1</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1046</ChanId>
+<ChanNum>46</ChanNum>
+<CallSign>Challenge</CallSign>
+<ChannelName>Challenge</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1047</ChanId>
+<ChanNum>47</ChanNum>
+<CallSign>4seven</CallSign>
+<ChannelName>4seven</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1048</ChanId>
+<ChanNum>48</ChanNum>
+<CallSign>movies4men</CallSign>
+<ChannelName>movies4men</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1049</ChanId>
+<ChanNum>49</ChanNum>
+<CallSign>TJC</CallSign>
+<ChannelName>TJC</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1055</ChanId>
+<ChanNum>55</ChanNum>
+<CallSign>Channel 5+24</CallSign>
+<ChannelName>Channel 5+24</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1133</ChanId>
+<ChanNum>133</ChanNum>
+<CallSign>Al Jazeera Eng</CallSign>
+<ChannelName>Al Jazeera Eng</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1135</ChanId>
+<ChanNum>135</ChanNum>
+<CallSign>RT</CallSign>
+<ChannelName>RT</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1170</ChanId>
+<ChanNum>170</ChanNum>
+<CallSign>ADULT Section</CallSign>
+<ChannelName>ADULT Section</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1171</ChanId>
+<ChanNum>171</ChanNum>
+<CallSign>Television X</CallSign>
+<ChannelName>Television X</ChannelName>
+<MplexId>6</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1172</ChanId>
+<ChanNum>172</ChanNum>
+<CallSign>ADULT smileTV2</CallSign>
+<ChannelName>ADULT smileTV2</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1173</ChanId>
+<ChanNum>173</ChanNum>
+<CallSign>ADULT smileTV3</CallSign>
+<ChannelName>ADULT smileTV3</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1174</ChanId>
+<ChanNum>174</ChanNum>
+<CallSign>ADULT Babestn</CallSign>
+<ChannelName>ADULT Babestn</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1175</ChanId>
+<ChanNum>175</ChanNum>
+<CallSign>ADULT PARTY</CallSign>
+<ChannelName>ADULT PARTY</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1731</ChanId>
+<ChanNum>731</ChanNum>
+<CallSign>Classic FM</CallSign>
+<ChannelName>Classic FM</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1732</ChanId>
+<ChanNum>732</ChanNum>
+<CallSign>LBC</CallSign>
+<ChannelName>LBC</ChannelName>
+<MplexId>4</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1792</ChanId>
+<ChanNum>792</ChanNum>
+<CallSign>ITV4</CallSign>
+<ChannelName>ITV4</ChannelName>
+<MplexId>5</MplexId>
+<Visible>true</Visible>
+</ChannelInfo>
+##XMLTV1
+##end
