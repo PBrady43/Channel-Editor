@@ -570,7 +570,7 @@ sub Import{
         while (<FH>){
             chomp;
             for $rule (1,2,3){     #leave out rule 4 for now - same as 1
-                    (my $action)= split '[]:[]', $_;
+                    (my $action)= split /\[\]:\[\]/, $_;
                     if (index('HVD',$action)<0){
                         &SimpleBox("You have an invalid file:\n $_");
                         return;
