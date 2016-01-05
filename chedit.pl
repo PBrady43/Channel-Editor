@@ -1261,7 +1261,7 @@ FILE
                3.  Source, frequency and callsign all match and the combination
                    is unique in the file and also unique in the database.
 
-               4.  There is multiple channels with the same callsign in 
+               4.  There are multiple channels with the same callsign in 
                    the file and the same number in the database.  
                    All are marked as hidden in the file.
 

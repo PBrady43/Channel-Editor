@@ -1,0 +1,306 @@
+            MythTV Channel Editor
+            ---------------------
+
+Do you run MythTV 0.27 or 0.28-pre ?
+Do you have too many channels to fully appreciate their settings?
+Do you want to locate which channels are hidden or duplicated?
+Do you want to 'hide' channels in bulk (eg all those with 'adult' in the name)?
+Have you done thousands of button presses to get your database the way you
+want it? 
+Are you apprehensive about a channel re-scan because you will lose those 
+settings?
+Are you wary of new software and want to try it out in a demonstration mode?
+
+If so, then the channel editor - the perl script chedit.pl may help you.
+
+It will:
+
+- Extract channel data from a backend.
+- Display channel data - ChannelId, Channel number, source, multiplex, 
+       state (hidden or duplicated) and callsign or channel name.
+- Allow display scrolling.
+- Allow channels to be sorted in various ways.
+- Allow channels to be marked for hiding, unhiding or deletion
+- Export the state of channels to a file for re-import so the same settings
+  can be re-applied after your next rescan.
+- Allow running in demo mode (no changes to database).
+- Allow 'spoofing' with alien data rather than reading the backend.  This 
+  was developed as a support tool but also supports the tutorial below.
+- Update MythTV database with your changes.
+
+The script uses the MythTV API interface and has been tested with both 0.27
+and 0.28-pre with UK DVB-T and DVB-S data and with US cable and 'over the air'
+ATSC data.  All tests have been in a Linux environment.
+
+Before trying it with your own precious database you will probably wish to try 
+it out with artificial data and a safe step by step tutorial as follows: 
+
+
+The tutorial - chedit.pl the MythTV channel editor.
+---------------------------------------------------
+
+This tutorial shows the features of the editor with a subset of data 'pruned'
+and modified from a UK system.
+
+Setup
+-----
+A suggested setup for channel editor is:
+Create a fresh directory to hold the files:
+  mkdir chedit
+  cd chedit
+
+Download the files required:
+
+chedit.pl           the perl script.
+scan_database.pm    the API interfacing module 
+                    (see  https://www.mythtv.org/wiki/Perl_API_examples).
+                    (see:  [[Perl_API_examples]]).
+tutorial.diags      if you wish to run the tutorial below.
+                    This holds the subset of UK data which has been pruned
+                    and tweaked to support the tutorial.
+
+Note that the suffixes are .pl and .pm respectively.
+
+The module scan_database.pm can actually be placed anywhere in the perl 'path'
+which you can list with:
+
+perl -e 'print join ("\n", @INC), "\n"'
+
+These three files can be found on github:   www.github.org/....
+    
+You can either extract these using git (if familiar) or copy
+and paste then into your favoured editor (hint:  Use 'raw' before
+copy).  
+
+Ensure that the very first line of chedit.pl and of scan_database.pm is:
+    #!/usr/bin/perl -w
+
+Then make them executable:
+
+chmod 755 *
+
+Now download the file demo.diags.  
+
+Start the channel editor in 'spoofing' mode with
+./chedit.pl -sp demo.diags
+
+This will start the editor in demonstration mode and read the file demo.diags
+to show the tutorial data rather than looking for data on your backend.
+
+You may be told that the libwww-perl module needs loading - if using ubuntu try
+
+sudo apt-get install libwww-perl
+
+Assuming that all required modules are available, it should show a full size
+screen with columns of channel data and a reminder that you are in demo mode.
+There is also a demo reminder top right of the screen.
+
+Click on 'OK' in the reminder box.
+
+
+Viewing data
+------------
+
+You should see a list of channels.  Note the scroll bar at the right.
+
+The channel columns are described under help>help.  Use the scroll bar at 
+the right to get down to the 'View' section. 
+
+Note the 'state' particularly of QVC with the 'H' for hidden, the two 
+ITV4 and the two Pick channels with 'd' as they are duplicated.
+
+Also the 'final' column which is the proposed setting after editing.
+
+Now try the sort options for the channels.
+
+eg   view > ChannelNo  or view > source:multiplex  or view > Name.
+
+View > duplicates will place duplicated entries such as ITV4 at the top of
+the screen.  ITV4 has two entries, one at channel 24 and another at 792.
+The 792 was introduced during a transmitter re-alignment and is a 
+'please retune' reminder channel.  Pick also has two channels (duplicated 
+manually though for demo purposes!).  
+
+Channels are only marked as duplicates if there is another channel with the 
+same number, same callsign or same channel name AND two or more will be 
+visible.
+
+As channels are edited to hide or delete them, the duplicate flag will be 
+cleared.
+
+The 'view > toggle name' allows you to switch between callsign (which is used
+in frontend) and channel name.  With UK DVB-T data these are all the same,
+but US data shows differences.  The channel 'Pick' has been doctored
+to demonstrate this.
+
+Reverse sort .. um..  .. reverses the sort!
+
+If there are insufficient sort options for you (eg you want hidden then name)
+then define your own custom rule with:
+
+     View > Create Custom sort    then
+     View > hidden                then
+     View > name                  then
+     View > Custom sort
+
+You can include up to six items.  Subsequent calls to   View > Custom sort 
+will bring up this rule.
+
+Now try 'view > multiplexes'
+
+This gives a list of your sources, your multiplexes, frequencies and number 
+of channels in each.  With some sources such as cable you may find some of 
+these fields are blank.
+
+View > log gives diagnostic information which i hope will not be needed.
+
+
+Edit Menu
+---------
+If you wish to eliminate the confusing duplicated ITV4 (and prevent recording
+failures) then first note the 'key' value for the channel 792 entry on the 
+left.  Then:
+
+ Edit > Key range
+ Insert a key range of 2
+ click 'Hide'
+
+Oops!  Did you spot the deliberate error?  Let us correct that.
+ 
+Try  edit > undo then try again with the correct value of 1.
+Channel 792 will now be shown as hidden (with ->H  in the
+'final' column and the 'd' flags will be cleared.
+
+Do likewise with one of the duplicated Pick channels - hide only one
+at this stage or the tutorial won't work later on!
+
+You can pick out a whole range of key values (eg 7:11 for 7 to 11 inclusive).
+
+At this stage, only the tables in memory are being changed - the database 
+remains intact.
+
+Hide a Multiplex
+
+Let's hide the whole of multiplex 5 in source 1;
+    Edit > source:multiplex; type 1:5; click 'Hide'
+
+You could unhide a whole source (but not now!);
+    Edit > source:multiplex; type 1; click 'unhide'.
+
+
+Hide by name
+
+Another filter is the name filter which will enable you to hide (say) all
+channels with 'adult' in the name.
+
+Edit > name, type 'adult' and choose 'hide'.  
+The name matching is case insensitive.
+
+Don't do it just now, but the 'Revert' button puts the selected 
+channels back to their original state, and  'Edit > undo all' reinstates
+all channels back to the original state to match the database. 
+
+
+Exporting and Importing
+-----------------------
+
+Having marked all the channels the way you want them and eliminated all
+duplicates you can update the database (or you could if this wasn't a 
+demonstration!) but before doing so let us 'export' the settings you have 
+made to a file for later use.  The file is called channels.export.
+
+The file can then be 'imported' after a channel re-scan to re-impose your 
+settings on the new channel configuration.  You may find a few which do not
+match due to new channels, or a complex setup.
+
+Do this: File > export.    This will mwrite the file channels.export.
+
+Now simulate a channel re-scan.  You can either quit the editor with 
+File > exit and restart it or simply choose edit > undo all.
+Your channels will now be just as they were at the start of the tutorial, but 
+let us now recover all the changes you made before you exported.
+
+Try File > Import
+
+The editor will read the channels.export file and use a set of four rules to
+match the channels - the rules are described in the help.
+
+If any channel cannot be matched then it will leave it unchanged but put a Q
+(for query) state.  You can sort by 'query' to identify these - also an entry
+will also be placed in the log.  The channel 'Pick' will not have been matched.
+Since it has two channels with the same channel number, same source, same
+multiplex and same callsign it defeats the algorithm and will need to be fixed 
+manually.  If earlier on you had marked both Pick channels for hiding then 
+there would have been no queries.
+
+When you do mark one of them for hiding or deleting the 'Q' flag will clear.
+
+Yes, that example was rather artificial - but duplicated channels like this 
+have been seen in the wild!
+
+As with all edits, you can 'undo' an import.
+
+
+Updating the Database
+---------------------
+
+Finally, the file > update database option will write the changes to the 
+database.  As you are in demo mode, this will do nothing.
+
+
+Real World Use
+--------------
+
+In order to run the editor against your own database, either
+
+./chedit.pl
+          for a safe demo mode with YOUR data  or
+
+./chedit.pl --nodemo  
+          for live mode which WILL update the database.
+
+If the script cannot find the backend address (it searches for a config.xml
+file in likely places), then it will ask you to specify the address or 
+hostname with the --backend parameter eg:
+
+  ./chedit.pl --backend 192.168.1.65
+
+If you have a port number other than 6544 then add it as
+
+  ./chedit.pl --backend 192.168.1.65:1234
+
+
+Please ensure that you have a robust backup strategy or are prepared to re-scan
+channels before using the --nodemo option.
+
+
+Errors and Bugs
+---------------
+Developing and testing this application with two sets of UK data and two sets 
+of USA data (thank you all!!) has shown that TV cultures are both very rich
+and very diverse.  If the code does not behave sanely the help>diagnostics
+facility has been included to assist investigation.
+
+This should generate a file 'channels.diags' which hopefully
+contains all the information necessary for the author to 'spoof' your
+system and reproduce the fault.
+
+The file should also be produced if the code throws an error.
+
+Please submit the file with any reports of problems.
+
+Best wishes
+
+Phil Brady
+4th January 2016.
+
+category:  perl scripts,  maintenance scripts.
+ 
+
+
+ 
+  
+
+
+
+

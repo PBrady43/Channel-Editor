@@ -1,0 +1,13 @@
+This repository holds the files for the MythTV channel editor.
+
+Files are:
+
+chedit.pl          the editor
+scan_database.pm   a supporting perl module
+tutorial.diags     Sample UK data to allow the tutorial.
+
+Full details and documnetation can be found in the mythTV wiki at:
+
+
+
+
