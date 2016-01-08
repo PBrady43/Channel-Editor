@@ -10,7 +10,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version='Release 0.03 201601004';
+my $version='Release 0.04 20160108';
 
 #changes 
 # 4 Dec 2014   Beta 2
@@ -1171,6 +1171,12 @@ my $out = <<"END_HELP";
 
                 MYTHTV CHANNEL EDITOR
 
+HELP NOTES
+
+    Please note the scroll bar on the right of the screen.
+    To quit help, just select a different item from the 'view' menu.
+
+ 
 DESCRIPTION
     
     This program will allow you to: 
@@ -1359,7 +1365,8 @@ EDIT
 
 
 HELP
-    help      gives this text
+    help      gives this text.   Exit help by selecting another screen in 
+                                 the view menu. 
 
     version   gives version numbrer
 
