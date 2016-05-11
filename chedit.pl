@@ -10,7 +10,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version='Release 0.04 20160108';
+my $version='Release 0.05 20160411';
 
 #changes 
 # 4 Dec 2014   Beta 2
@@ -86,6 +86,14 @@ my $version='Release 0.04 20160108';
 # a) added title line
 # b) separator now []:[]  not just :
 # version 0.03 20160104
+
+#11 May 2016   Version 0.05 20160104
+#Corrected ChannelNumber tidying in Interrogatebackend
+# a) malformed regex
+# b) handle chan numbers like -12345
+#This does not affect version 2.
+
+ 
 
 my $backend; my $spoof; my %ChanData; my %MplexInfo;my %sources;my $nodemo=0; my $demo=1;
 my $mythversion='0'; 
@@ -1105,11 +1113,11 @@ sub InterrogateBackend{
                 $ChanData{$_}{Sort}=$1*1024 +$3;
                 $ChanData{$_}{ChanNum} = sprintf "  %4d%1s%-4d ",$1,$2, $3;
 
-            #or _23
-            }elsif ($chan=~ /^s?(\D)(\d+)\s?$/){
+            #or _23 
+            }elsif ($chan=~ /^\s?(\D)(\d+)\s?$/){
                 $ChanData{$_}{Sort}=$2;
-                $ChanData{$_}{ChanNum} = sprintf "      %1s%-4d ",$1,$2;
-
+                $ChanData{$_}{ChanNum} = sprintf "%9s   ","${1}${2}";
+                
             #or simple numeric
             }elsif ($chan=~ /^\s?(\d+)\s?$/){
                 $ChanData{$_}{Sort}=$1;
@@ -1141,19 +1149,9 @@ sub InterrogateBackend{
     }
     &postmortem($@) if ($@);
     return;
-
-print "mpx Info at 1088\n";
-for (keys %MplexInfo){
-   print "id=$_ ";
-#   print "freq= $MplexInfo{$_}{Frequency} ";
-#   print " std=$MplexInfo{$_}{Standard}";
-#   print " sort=$MplexInfo{$_}{sort} 
-   print "count=$MplexInfo{$_}{Count}\n";
 }
-exit 0;
 
 
-}
 
 
 #-------help--------
@@ -1398,4 +1396,5 @@ FILES
 END_HELP
 $pane2 -> configure(-text => $out, -anchor =>"nw", -justify=>'left');
 }
+
 
