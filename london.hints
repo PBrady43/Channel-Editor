@@ -1,0 +1,34 @@
+#
+#This is a hints file for matching XMLTV data with callsigns from MythTV
+#It is UK specific
+#
+#  These are local - adjust to suit your own locale:
+#
+#format is database callsign text :  xml file text
+lon:london
+:london
+
+#
+#These may be more generic:
+#
+:england
+eng:england
+eng:english
+e:east
+w:west
+westmid:westmidlands
+emid:eastmidlands
+scot:scotland
+yorks:yorkshire
+s:south
+e:\(e\)
+w:\(w\)
+n:north
+ni:northernireland
+ci:channelislands
+:\[freeview\]
+wal:wales
+star:\*
+&:and
+pick:picktv
+

@@ -9,31 +9,37 @@
 <VideoMultiplex>
 <MplexId>1</MplexId>
 <Frequency>490000000</Frequency>
+mpx 1 freq 490000000
 <SIStandard>dvb</SIStandard>
 </VideoMultiplex>
 <VideoMultiplex>
 <MplexId>2</MplexId>
 <Frequency>514000000</Frequency>
+mpx 2 freq 514000000
 <SIStandard>dvb</SIStandard>
 </VideoMultiplex>
 <VideoMultiplex>
 <MplexId>4</MplexId>
 <Frequency>482000000</Frequency>
+mpx 4 freq 482000000
 <SIStandard>dvb</SIStandard>
 </VideoMultiplex>
 <VideoMultiplex>
 <MplexId>5</MplexId>
 <Frequency>530000000</Frequency>
+mpx 5 freq 530000000
 <SIStandard>dvb</SIStandard>
 </VideoMultiplex>
 <VideoMultiplex>
 <MplexId>6</MplexId>
 <Frequency>506000000</Frequency>
+mpx 6 freq 506000000
 <SIStandard>dvb</SIStandard>
 </VideoMultiplex>
 <VideoMultiplex>
 <MplexId>7</MplexId>
 <Frequency>538000000</Frequency>
+mpx 7 freq 538000000
 <SIStandard>dvb</SIStandard>
 </VideoMultiplex>
 ##channels1
@@ -43,7 +49,12 @@
 <CallSign>BBC ONE Lon</CallSign>
 <ChannelName>BBC ONE Lon</ChannelName>
 <MplexId>1</MplexId>
+<SourceId>1</SourceId>
+<Frequency>490000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1002</ChanId>
@@ -51,7 +62,12 @@
 <CallSign>BBC TWO</CallSign>
 <ChannelName>BBC TWO</ChannelName>
 <MplexId>1</MplexId>
+<SourceId>1</SourceId>
+<Frequency>490000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1003</ChanId>
@@ -59,7 +75,12 @@
 <CallSign>ITV</CallSign>
 <ChannelName>ITV</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1004</ChanId>
@@ -67,7 +88,12 @@
 <CallSign>Channel 4</CallSign>
 <ChannelName>Channel 4</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1005</ChanId>
@@ -75,7 +101,12 @@
 <CallSign>Channel 5</CallSign>
 <ChannelName>Channel 5</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1006</ChanId>
@@ -83,7 +114,12 @@
 <CallSign>ITV2</CallSign>
 <ChannelName>ITV2</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1007</ChanId>
@@ -91,15 +127,25 @@
 <CallSign>BBC THREE</CallSign>
 <ChannelName>BBC THREE</ChannelName>
 <MplexId>1</MplexId>
+<SourceId>1</SourceId>
+<Frequency>490000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1008</ChanId>
 <ChanNum>8</ChanNum>
 <CallSign>London Live</CallSign>
 <ChannelName>London Live</ChannelName>
-<MplexId>7</MplexId>
+<MplexId>1</MplexId>
+<SourceId>1</SourceId>
+<Frequency>490000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1009</ChanId>
@@ -107,7 +153,12 @@
 <CallSign>BBC FOUR</CallSign>
 <ChannelName>BBC FOUR</ChannelName>
 <MplexId>1</MplexId>
+<SourceId>1</SourceId>
+<Frequency>490000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1010</ChanId>
@@ -115,7 +166,12 @@
 <CallSign>ITV3</CallSign>
 <ChannelName>ITV3</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1011</ChanId>
@@ -123,15 +179,12 @@
 <CallSign>Pick</CallSign>
 <ChannelName>Pick something else</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
-</ChannelInfo>
-<ChannelInfo>
-<ChanId>1050</ChanId>
-<ChanNum>11</ChanNum>
-<CallSign>Pick</CallSign>
-<ChannelName>Pick something else</ChannelName>
-<MplexId>4</MplexId>
-<Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1012</ChanId>
@@ -139,7 +192,12 @@
 <CallSign>Dave</CallSign>
 <ChannelName>Dave</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1013</ChanId>
@@ -147,7 +205,12 @@
 <CallSign>Channel 4+1</CallSign>
 <ChannelName>Channel 4+1</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1014</ChanId>
@@ -155,7 +218,12 @@
 <CallSign>More 4</CallSign>
 <ChannelName>More 4</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1015</ChanId>
@@ -163,7 +231,12 @@
 <CallSign>Film4</CallSign>
 <ChannelName>Film4</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1016</ChanId>
@@ -171,7 +244,12 @@
 <CallSign>QVC</CallSign>
 <ChannelName>QVC</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>false</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1017</ChanId>
@@ -179,7 +257,12 @@
 <CallSign>Really</CallSign>
 <ChannelName>Really</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1018</ChanId>
@@ -187,7 +270,12 @@
 <CallSign>4Music</CallSign>
 <ChannelName>4Music</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1019</ChanId>
@@ -195,7 +283,12 @@
 <CallSign>Yesterday</CallSign>
 <ChannelName>Yesterday</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1020</ChanId>
@@ -203,7 +296,12 @@
 <CallSign>Drama</CallSign>
 <ChannelName>Drama</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1021</ChanId>
@@ -211,7 +309,12 @@
 <CallSign>5 USA</CallSign>
 <ChannelName>5 USA</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1022</ChanId>
@@ -219,7 +322,12 @@
 <CallSign>Ideal World</CallSign>
 <ChannelName>Ideal World</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1024</ChanId>
@@ -227,7 +335,12 @@
 <CallSign>ITV4</CallSign>
 <ChannelName>ITV4</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1025</ChanId>
@@ -235,7 +348,12 @@
 <CallSign>Dave ja vu</CallSign>
 <ChannelName>Dave ja vu</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1026</ChanId>
@@ -243,7 +361,12 @@
 <CallSign>ITVBe</CallSign>
 <ChannelName>ITVBe</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1027</ChanId>
@@ -251,7 +374,12 @@
 <CallSign>ITV2 +1</CallSign>
 <ChannelName>ITV2 +1</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1028</ChanId>
@@ -259,7 +387,12 @@
 <CallSign>E4</CallSign>
 <ChannelName>E4</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1029</ChanId>
@@ -267,7 +400,12 @@
 <CallSign>E4+1</CallSign>
 <ChannelName>E4+1</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1030</ChanId>
@@ -275,7 +413,12 @@
 <CallSign>5*</CallSign>
 <ChannelName>5*</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1031</ChanId>
@@ -283,7 +426,12 @@
 <CallSign>Spike</CallSign>
 <ChannelName>Spike</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1032</ChanId>
@@ -291,7 +439,12 @@
 <CallSign>Movie Mix</CallSign>
 <ChannelName>Movie Mix</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1033</ChanId>
@@ -299,7 +452,12 @@
 <CallSign>ITV +1</CallSign>
 <ChannelName>ITV +1</ChannelName>
 <MplexId>2</MplexId>
+<SourceId>1</SourceId>
+<Frequency>514000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1034</ChanId>
@@ -307,7 +465,12 @@
 <CallSign>ITV3+1</CallSign>
 <ChannelName>ITV3+1</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1035</ChanId>
@@ -315,7 +478,12 @@
 <CallSign>QVC Beauty</CallSign>
 <ChannelName>QVC Beauty</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1036</ChanId>
@@ -323,7 +491,12 @@
 <CallSign>Create &amp; Craft</CallSign>
 <ChannelName>Create &amp; Craft</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1037</ChanId>
@@ -331,7 +504,12 @@
 <CallSign>QUEST</CallSign>
 <ChannelName>QUEST</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1038</ChanId>
@@ -339,7 +517,12 @@
 <CallSign>QUEST+1</CallSign>
 <ChannelName>QUEST+1</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1039</ChanId>
@@ -347,7 +530,12 @@
 <CallSign>The Store</CallSign>
 <ChannelName>The Store</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1040</ChanId>
@@ -355,7 +543,12 @@
 <CallSign>Rocks &amp; Co 1</CallSign>
 <ChannelName>Rocks &amp; Co 1</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1041</ChanId>
@@ -363,7 +556,12 @@
 <CallSign>Food Network</CallSign>
 <ChannelName>Food Network</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1042</ChanId>
@@ -371,7 +569,12 @@
 <CallSign>Travel Channel</CallSign>
 <ChannelName>Travel Channel</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1043</ChanId>
@@ -379,7 +582,12 @@
 <CallSign>Gems TV</CallSign>
 <ChannelName>Gems TV</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1044</ChanId>
@@ -387,7 +595,12 @@
 <CallSign>Channel 5+1</CallSign>
 <ChannelName>Channel 5+1</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1046</ChanId>
@@ -395,7 +608,12 @@
 <CallSign>Challenge</CallSign>
 <ChannelName>Challenge</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1047</ChanId>
@@ -403,7 +621,12 @@
 <CallSign>4seven</CallSign>
 <ChannelName>4seven</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1048</ChanId>
@@ -411,7 +634,12 @@
 <CallSign>movies4men</CallSign>
 <ChannelName>movies4men</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1049</ChanId>
@@ -419,7 +647,12 @@
 <CallSign>TJC</CallSign>
 <ChannelName>TJC</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1055</ChanId>
@@ -427,7 +660,12 @@
 <CallSign>Channel 5+24</CallSign>
 <ChannelName>Channel 5+24</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1133</ChanId>
@@ -435,7 +673,12 @@
 <CallSign>Al Jazeera Eng</CallSign>
 <ChannelName>Al Jazeera Eng</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1135</ChanId>
@@ -443,7 +686,12 @@
 <CallSign>RT</CallSign>
 <ChannelName>RT</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1170</ChanId>
@@ -451,7 +699,12 @@
 <CallSign>ADULT Section</CallSign>
 <ChannelName>ADULT Section</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1171</ChanId>
@@ -459,7 +712,12 @@
 <CallSign>Television X</CallSign>
 <ChannelName>Television X</ChannelName>
 <MplexId>6</MplexId>
+<SourceId>1</SourceId>
+<Frequency>506000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1172</ChanId>
@@ -467,7 +725,12 @@
 <CallSign>ADULT smileTV2</CallSign>
 <ChannelName>ADULT smileTV2</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1173</ChanId>
@@ -475,7 +738,12 @@
 <CallSign>ADULT smileTV3</CallSign>
 <ChannelName>ADULT smileTV3</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1174</ChanId>
@@ -483,7 +751,12 @@
 <CallSign>ADULT Babestn</CallSign>
 <ChannelName>ADULT Babestn</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1175</ChanId>
@@ -491,7 +764,12 @@
 <CallSign>ADULT PARTY</CallSign>
 <ChannelName>ADULT PARTY</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1731</ChanId>
@@ -499,7 +777,12 @@
 <CallSign>Classic FM</CallSign>
 <ChannelName>Classic FM</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1732</ChanId>
@@ -507,7 +790,12 @@
 <CallSign>LBC</CallSign>
 <ChannelName>LBC</ChannelName>
 <MplexId>4</MplexId>
+<SourceId>1</SourceId>
+<Frequency>482000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1792</ChanId>
@@ -515,7 +803,51 @@
 <CallSign>ITV4</CallSign>
 <ChannelName>ITV4</ChannelName>
 <MplexId>5</MplexId>
+<SourceId>1</SourceId>
+<Frequency>530000000</Frequency>
 <Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1800</ChanId>
+<ChanNum>8</ChanNum>
+<CallSign>London Live</CallSign>
+<ChannelName>London Live</ChannelName>
+<MplexId>7</MplexId>
+<SourceId>1</SourceId>
+<Frequency>538000000</Frequency>
+<Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1801</ChanId>
+<ChanNum>1</ChanNum>
+<CallSign>BBC ONE Lon</CallSign>
+<ChannelName>BBC ONE Lon</ChannelName>
+<MplexId>7</MplexId>
+<SourceId>1</SourceId>
+<Frequency>538000000</Frequency>
+<Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
+</ChannelInfo>
+<ChannelInfo>
+<ChanId>1802</ChanId>
+<ChanNum>2</ChanNum>
+<CallSign>BBC TWO</CallSign>
+<ChannelName>BBC TWO</ChannelName>
+<MplexId>7</MplexId>
+<SourceId>1</SourceId>
+<Frequency>538000000</Frequency>
+<Visible>true</Visible>
+<UseEIT>true</UseEIT>
+<CommFree>false</CommFree>
+<XMLTVID></XMLTVID>
 </ChannelInfo>
 ##XMLTV1
 ##end
