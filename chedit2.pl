@@ -23,7 +23,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version=' Beta: tkf04.pl 10 May 2016';
+my $version=' Beta: tkg02.pl 25 May 2016';
 
 
 #changes 
@@ -159,6 +159,21 @@ my $version=' Beta: tkf04.pl 10 May 2016';
 #check baackend address much earlier in case of postmortem.
 #less import file reporting at start - less terminal clutter 
 
+#13May2016
+#Added FrequencyId and Channelname to list recovered from backend.
+#Sort by both
+#Fixed alignment issue - removed 2 extra spaces before numeric fields in TidyData
+#Don't create column for frequency from import file
+#Added new view - ChannelName
+
+#15May 2016
+#change all white spaces in data in sub refresh - fixes alignment of ChannelName
+#export/import FrequenctId instead of Frequency - should give better matching.
+
+#25May2016
+#Allow t, f, d for bool values in Sub EditSingle
+#Hints removed - log merges instead.
+
 my $showdata='';
 vec($showdata, 2**18-1, 8)=0;
 $showdata = '';
@@ -166,7 +181,9 @@ $showdata = '';
 
 my $backend; my $spoof; my %ChanData; my %MplexInfo;my %sources;my $nodemo=0; my $demo=1;
 my $Extra;
-my %xmlhash;   #for matching xmltv entries 
+my %xmlhash;     #for matching xmltv entries 
+my @mergelog=();  #manual matches
+my $xmltvmatchcount=0;
 my $xmltvmultiplex;
 
 
@@ -210,26 +227,28 @@ my $ViewChoice='Normal';
 my $LastChannelView='Normal';
 my $ChNoLeft=0; my $ChNoRight=0;     #space allocated for ATSC major/minor  (or non atsc/nothing)
 
-my %columns = (    #column heading, format for view, flags (R=read backend,W=check width, E=edit, x=export, I=import without asking, i=do not import, C=custom column, B=Bulk edit item )
+my %columns = (    #column heading, format for view, flags (R=read backend,W=check width, E=edit, X=export, I=import without asking, i=do not import, C=custom column, B=Bulk edit item )
     ChanNum    =>  ['  ChNum','%7s','RXIECB'],
     SourceId   =>  [' Src:',' %3d:','RXi'],
     MplexId    =>  ['Mpx','%-3d','RXi'],
     Flags      =>  ['  DVECdQUM','  %-8s','C'],
     XMLTVID    =>  ["  XMLTVID", "  %-38s",'RWXIECB'],
-    CallSign   =>  ["  CallSign", "  %-28s",'RWXIEC'],   #but modified in Interrogatebackend
+    CallSign   =>  ["  CallSign", "  %-28s",'RWXIEC'],
     ChanId     =>  ["  ChId","%6d",'Ci'],
     Sort       =>  [" Sort  ", "%7d",''],
     Visible    =>  ['','','RXIE'],
     UseEIT     =>  ['','','RXIE'],
     CommFree   =>  ['','','RXIE'],
-    Frequency  =>  ['  Frequency','  %6s','Xi'],
     OldCallSign=>  ['  OldCallSign', '%-28s', ''],   #set to RWXIC if callsign changed
    'Src:Mpx'   =>  ['','','C'],
     NewState   =>  ['','',''],           # ) legacy export file parameters
     Source     =>  ['','',''],           # )
+    FrequencyId=>  ['FqId', '', 'RWXiC'],
+    ChannelName=>  ['  ChannelName', '', 'RWExIC'],
+    Frequency  =>  ['','','i'],
 );
 
-my @columnswanted = qw/ChanId ChanNum SourceId MplexId Flags CallSign XMLTVID/;
+my @columnswanted = qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
 my @customcolumns = ();
  
 
@@ -248,7 +267,8 @@ my %sortitems =(
    MplexId          => [0,'',1],
    Multiplex        => [2,'MplexId', 1], 
    CallSign         => [3, 'CallSign',2],
-   #Frequency        => [3, 'Frequency', 1],
+   ChannelName      => [3, 'ChannelName', 2],
+   FrequencyId      => [3, 'FrequencyId', 1],
    XMLTVID          => [3, 'XMLTVID', 2],
   'Visible/deleted' => [3,'Visible', 99],
    UseEIT           => [3, '-E', 3],
@@ -306,6 +326,9 @@ eval{
                           -> pack(-side => "left");
        $ViewMenu -> radiobutton(-label => "Show default columns", -variable=>\$ViewChoice, -value=>'Normal',
                                 -command=> \&ChooseDisplay);
+       $ViewMenu -> radiobutton(-label => "Show Channelname",    -variable=>\$ViewChoice, -value=>'ChannelName',
+                                -command=> \&ChooseDisplay);
+
        if ($Extra){
           $ViewMenu -> radiobutton(-label => "Show $Extra", -variable=>\$ViewChoice, 
                             -value=>'Extra', -command=> \&ChooseDisplay);
@@ -318,7 +341,7 @@ eval{
        $ViewMenu -> radiobutton(-label => "Show log", -variable=>\$ViewChoice, -value=>'Log',
                                                       -command      => \&ShowLog);
        $ViewMenu ->  separator();
-       $ViewMenu -> radiobutton(-label=>"Define Custom columns", -variable=>\$ViewChoice, -command=> sub{&CreateColumns});
+       $ViewMenu ->  radiobutton(-label=>"Define Custom columns", -variable=>\$ViewChoice, -command=> sub{&CreateColumns});
 
   
 
@@ -352,7 +375,7 @@ eval{
     my $XMLTVmenu =  $menubar -> Menubutton(-text =>"XMLTV", -menuitems  => [
           [ Button => "Import XMLTV", -command   => \&ImportXMLTV],
           [ Button => "Show matches",   -command   => sub{&ShowXMLTV(1)}],
-          [ Button => "Merge",        -command   => sub{&MatchXMLTV('Merging')}],
+          [ Button => "Merge",        -command   => \&MatchXMLTV],
           [ Button => "Commit",       -command   => \&CommitXMLTV],
           ]) ->pack(-side => "left");
 
@@ -453,33 +476,36 @@ sub preamble{
             $Extra='';
         }
         mylog(0,"Extra=$Extra");
-        $columns{$Extra} = ["  $Extra", '%6s', 'RWXCEB'] if $Extra;
-        
+        $columns{$Extra} = ["  $Extra", '%6s', 'RWCEB'] if $Extra;
+ 
         #check export file (if any) - note columns in it
-        if (-e 'channels.export'){
-            unless (open  FH, "<channels.export") {mylog(1,'Cannot open channels.export'); exit 0};
-            #read heading
-            
-            chomp (my $line=<FH>);
-            $text='Import parameters found are: ';
+        if (0){     #Removed - too complex
+            if (-e 'channels.export'){
+                unless (open  FH, "<channels.export") {mylog(1,'Cannot open channels.export'); exit 0};
+                #read heading
+                
+                chomp (my $line=<FH>);
+                $text='Import parameters found are: ';
 
-            for (split /\[\]:\[\]/, $line){
-                #add to list of interesting columns
-                $text .= "  $_";
-                if ((!exists $columns{$_}) && ($_ ne 'OldCallSign')){
-                    $columns{$_}=["  $_", '%9s', 'RWXCEB'];
+                for (split /\[\]:\[\]/, $line){
+                    #add to list of interesting columns
+                    $text .= "  $_";
+                    if ((!exists $columns{$_}) && ($_ ne 'OldCallSign') && ($_ ne 'Frequency') ){
+                        $columns{$_}=["  $_", '%9s', 'RWXCEB'];
+                    }
                 }
-            }
-            close FH;
-            mylog(0, $text);
-            #Sanity check:
-            for (qw/ChanNum Source MplexId Frequency CallSign/){
-               if ($line !~ /$_/){
-                    print "channels.export file is malformed:  cannot find $_ in header\n";
-                    print "Please rectify or delete it then try again\n";
-                    exit 0;
-               }
-            }
+                close FH;
+                mylog(0, $text);
+
+                #Sanity check:
+                for (qw/ChanNum Source MplexId CallSign/){
+                   if ($line !~ /$_/){
+                        print "channels.export file is malformed:  cannot find $_ in header\n";
+                        print "Please rectify or delete it then try again\n";
+                        exit 0;
+                   }
+                }
+           }
         }
         &InterrogateBackend;
     };
@@ -535,8 +561,7 @@ sub EditSelection{
         #now change channels
         push @UndoPointer, scalar @Undo;  #remember where we started this undo batch
 
-        for (@selection){
-            
+        for (@selection){          
             if ($action eq 'Add'){
                 SetNewValue($_, $param, $ChanData{$_}{$param} +$SetValue);
             }else{
@@ -694,7 +719,7 @@ sub EditSingle{
         my $box=$main->DialogBox(
             -title => "Edit single channel",
             -buttons => ['ok','Cancel'],
-            -default_button => 'Cancel');
+            -default_button => 'ok');
 
         $box -> add('Label', -text=> "\nEditing:  ChanID = $id,  Source=$source,  Multiplex=$mpx.\nCallSign=$hash{CallSign}\n")->pack;
         $box -> add('Label', -text=> "Edit boxes as required then ok or cancel\n")->pack;
@@ -712,18 +737,25 @@ sub EditSingle{
         my $return = $box -> Show();
         return if ($return ne 'ok');
 
-        #check then tidy user input
+        #check that we have tidy user input
+
+       for (qw/Visible UseEIT CommFree/){
+            if ($hash{$_} =~ /^t/i){$hash{$_}='true'};    #accept just first character
+            if ($hash{$_} =~ /^d/i){$hash{$_}='delete'};
+            if ($hash{$_} =~ /^f/i){$hash{$_}='false'};
+        }
+
         unless ($hash{Visible} =~ /^true|false|delete$/){
-            SimpleBox("Invalid value for Visible ignored");
+            SimpleBox("Invalid value $hash{Visible} for Visible ignored");
             $hash{Visible}=$ChanData{$id}{Visible};
         }
 
         unless ($hash{UseEIT} =~ /^true|false$/){
-            SimpleBox("Invalid value for UseEIT ignored");
+            SimpleBox("Invalid value $hash{UseEIT} for UseEIT ignored");
             $hash{UseEIT}=$ChanData{$id}{UseEIT};
         }
         unless (($hash{CommFree} eq $CommFreeTrue) or ($hash{CommFree} eq $CommFreeFalse)){
-            SimpleBox("Invalid value for CommFree ignored");
+            SimpleBox("Invalid value $hash{CommFree} for CommFree ignored");
             $hash{CommFree}=$ChanData{$id}{CommFree};
         }
 
@@ -952,6 +984,9 @@ sub OutputDiags{
 sub track{
 
     #put entry in track log
+
+
+
     (my $param)=@_;
     $param ||='';
     $param =~ s/\n/ /;
@@ -1098,22 +1133,21 @@ sub TidyData{
         my @fields=columnlist('W');
 
         for my $field (@fields){
-
-
             my $heading=$columns{$field}[0];
             $heading =~ s/\s//g;
             my $align=1;  #1=numeric, -1=text
             my $max=2+length($heading);
+
             for (keys %ChanData){
                 $temp=$ChanData{$_}{$field};
                 $max=length($temp) if $max<length($temp);
                 $align=-1 unless $temp =~ m!^\s*\d+\s*$!;
             }
-            
+ 
             if ($align >0){
                 #right justify numeric
-                $columns{$field}[0]= ' ' x ($max-length $heading) . "  $heading";
-                $columns{$field}[1] = '  %'. $max . 's';
+                $columns{$field}[0]= ' ' x ($max-length $heading) . "$heading";
+                $columns{$field}[1] = '%'. $max . 's';
 
             }else{
                 #left justify string
@@ -1239,8 +1273,9 @@ sub Import{
         chomp ($_=<FH>);
         s/\]Source\[/\]SourceId\[/;      #align legacy header
         my @headings = split /\[\]:\[\]/, $_;
-       
-        #read values
+        my $freqtype=(/FrequencyId/)?'FrequencyId':'Frequency';
+
+        #read values from import file
         my %item; my $k, my $v; my $linecount=0;my @values;my $ChanId;
         while ($_= <FH>){
             chomp;
@@ -1256,18 +1291,18 @@ sub Import{
             $item{OldCallSign}='' if ($item{OldCallSign} eq $item{CallSign});
 
             #tidy up version 1 data
-            if (defined $item{NewVisible}){
-                $v=index('VHD',$item{NewVisible});
-                if ($v<0){SimpleBox('Invalid file - newvisible field suspect'); return};
-                $item{Visible}= qw/true false delete/[$v]
+            if (defined $item{NewState}){
+                $v=index('VHD',$item{NewState});
+                if ($v<0){SimpleBox('Invalid file - newstate field suspect'); return};
+                $item{Visible}= qw/true false delete/[$v];
             }
-
+            
             #now generate match entries for callsign and oldcallsign
             my $name;
             for $name (qw/CallSign OldCallSign/){
                 next if $item{$name} eq '';
                 for $rule (1..3){  
-                    $index=fingerprint($rule, $item{ChanNum}, $item{SourceId}, $item{Frequency}, $item{$name});
+                    $index=fingerprint($rule, $item{ChanNum}, $item{SourceId}, $item{$freqtype}, $item{$name});
                     $Chans{$index}{count}++;
                     $Chans{$index}{FileLine}=$linecount;
                 }
@@ -1279,10 +1314,13 @@ sub Import{
         #
         #now scan database and generate match hash entries
         #
-
+        track();
         for (sort keys %ChanData){
-            my $freq=$MplexInfo{$ChanData{$_}{SourceId} .':'. $ChanData{$_}{MplexId}}{Frequency};
-            for $rule (1..3){
+           my $freq=$ChanData{$_}{FrequencyId};  #version 2
+           if ($freqtype eq 'Frequency'){        #version 1
+                 $freq=$MplexInfo{$ChanData{$_}{SourceId} .':'. $ChanData{$_}{MplexId}}{Frequency};
+           }
+           for $rule (1..3){
                 $index=fingerprint($rule, $ChanData{$_}{ChanNum}, $ChanData{$_}{SourceId}, $freq, $ChanData{$_}{CallSign});
                 $Chans{$index}{count} +=1000;
                 $Chans{$index}{ChanId}=$_;
@@ -1455,11 +1493,7 @@ sub Export{
             $ChanData{$_}{OldCallSign}='' if ($ChanData{$_}{OldCallSign} eq $ChanData{$_}{CallSign});
 
             for $field (@fields){
-                if ($field eq 'Frequency'){
-                    $val=$MplexInfo{$ChanData{$_}{SourceId} .':'. $ChanData{$_}{MplexId}}{Frequency};
-                }else{ 
-                    $val=$ChanData{$_}{$field};
-                }
+                $val=$ChanData{$_}{$field};
                 $val =~s/\s/ /g;    #kill newlines, linefeeds etc 
                 push @out, $val;
             }   
@@ -1692,7 +1726,9 @@ sub ChooseDisplay{
     mylog(0,"ChooseDisplay $ViewChoice"); track();
     $LastChannelView=$ViewChoice;
     if ($ViewChoice eq 'Normal'){
-        @columnswanted=qw/ChanId ChanNum SourceId MplexId Flags CallSign XMLTVID/;
+        @columnswanted=qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
+    }elsif ($ViewChoice eq 'ChannelName'){
+        @columnswanted=qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign ChannelName/;
     }elsif ($ViewChoice eq 'Extra'){
         @columnswanted=qw/ChanId ChanNum SourceId MplexId Flags CallSign/;
         push @columnswanted, $Extra;
@@ -1767,6 +1803,7 @@ sub refresh{
             $heading .= $columns{$k}[0];
             $format .= $columns{$k}[1];
        }
+
        $headings -> configure(-text => $heading, -anchor =>"nw", -justify=>'left');
 
         #now try to print real data
@@ -1784,6 +1821,7 @@ sub refresh{
                 }else{
                     push @values, $ChanData{$id}{$_};
                 }
+                $values[-1] =~ s/\s/ /g;  #eliminate tabs etc in data (eg ChannelName)
             }
             $showdata .= sprintf "$format\n", @values;
        }
@@ -1849,7 +1887,8 @@ sub ImportXMLTV{
 
     eval{
         track();
-        my @hints=();
+        @mergelog=();
+        $xmltvmatchcount=0;
         my $k=0; my $name; my $xmlid; my $reply;
         %xmlhash=();
         #
@@ -1871,6 +1910,7 @@ sub ImportXMLTV{
             $k=$name;
             $k =~s/\s//g;
             $k =lc($k);
+            $k =~ s/://g;
             $xmlhash{$k}{CallSign}=$name;
             $xmlhash{$k}{XMLTVID}='';
             $xmlhash{$k}{XMLTVname}='';
@@ -1905,7 +1945,7 @@ sub ImportXMLTV{
                     $k=$1;         #callsign in xmltv file
                     $name=$k;
                     #generate key
-                    $k =~s/\s//g; $k =lc($k);
+                    $k =~s/\s//g; $k =lc($k);$k =~ s/://g;
                     $xmlhash{$k}{XMLTVID}=$xmlid;
                     $xmlhash{$k}{XMLTVname}=$name;
                     $xmlhash{$k}{CallSign}||='';
@@ -1949,52 +1989,9 @@ sub ImportXMLTV{
         }
         close XM;
 
-
-        #get hints
-        @hints=();
-        ($reply, $filename)= GetInput("Give hints file (if any):",'');
-        if (($reply  eq 'ok') && ($filename ne '')){
-            unless (open  HINTS, '<', $filename) {SimpleBox("Cannot open hints file"); return}; 
-            mylog(0,"    ImportXMLTV hints file $filename");    
-            while (<HINTS>){
-                if (/\s*#/){
-                }elsif(/:/){
-                    chomp;
-                    $_ = lc($_);
-                    push @hints, $_;
-                }
-            }
-            close HINTS;
-
-            #now match missing ones using the hints if possible
-            for $k (keys %xmlhash){
-                #if ((defined $xmlhash{$k}) && ($xmlhash{$k}{CallSign} eq '')){
-                if ($xmlhash{$k}{XMLTVname} ne ''){
-                    my $count=0;
-                    for my $hint (@hints){
-                        my ($to, $from)=split /:/, $hint;
-                        $k2=$k;
-                        $k2 =~ s/$from/$to/;
-                        next if $k eq $k2;
-                        if ((defined $xmlhash{$k2}) && ($xmlhash{$k2}{XMLTVname} eq '')){
-                            #copy details
-                            
-                            #print "$count merge $k to $k2\n";
-                            $count++;
-                            track("XMLTV copy $k to $k2"); 
-                            $xmlhash{$k2}{XMLTVname} =$xmlhash{$k}{XMLTVname};
-                            $xmlhash{$k2}{XMLTVID} =$xmlhash{$k}{XMLTVID};
-                        }
-                    }
-                    if (($count>0) && ($xmlhash{$k}{CallSign} eq '')){
-                        delete $xmlhash{$k};
-                        track("delete $k");
-                    }
-                }
-            }
-
-        }
-
+        ReadMergeLog();
+        #   author has come to the conclusion that hints in earlier code only added confusion.
+        #   Merge log is simpler and better for the euser.
 
         #count matches and show results
         for (keys %xmlhash){
@@ -2037,8 +2034,7 @@ sub ShowXMLTV{
 
 
 sub MatchXMLTV{
-    (my $action)=@_;
-
+ 
     eval{
         mylog(0,"MatchXMLTV");track();
         ShowXMLTV(0);
@@ -2051,19 +2047,42 @@ sub MatchXMLTV{
         my $L=scalar(keys %xmlhash)-1;
         if (($d<0) || ($d > $L) || ($x<0) || ($x>$L) || ($x==$d)){ SimpleBox("Invalid row"); return};
         my ($dname, $xname) = (sort keys %xmlhash)[$d, $x];
-        return unless (&CheckOk("$action: $xmlhash{$dname}{CallSign} -> $xmlhash{$xname}{XMLTVname}") eq 'ok');
-
-        $xmlhash{$dname}{XMLTVID}=$xmlhash{$xname}{XMLTVID};
-
-        if ($action eq 'Merging'){
-            $xmlhash{$dname}{XMLTVname}=$xmlhash{$xname}{XMLTVname};
-            delete $xmlhash{$xname} if $xmlhash{$xname}{CallSign} eq '';
-            mylog(0,"    Merging $d -> $x"); 
-        }else{
-            $xmlhash{$dname}{XMLTVname}="($xmlhash{$xname}{XMLTVname})";
-            mylog(0,"    Copying $d -> $x"); 
-        }    
+        return unless (&CheckOk("Matching: $xmlhash{$dname}{CallSign} -> $xmlhash{$xname}{XMLTVname}") eq 'ok');
+        MatchXMLTVdetail($dname, $xname);
         ShowXMLTV(0);
+        $xmltvmatchcount++;
+    };
+    postmortem($@) if ($@);
+}
+
+sub MatchXMLTVdetail{
+
+    my ($dname, $xname)=@_;
+    eval{
+        mylog(0, "XMLTV merge $dname -> $xname");
+        if ((!exists $xmlhash{$dname}) or (!exists $xmlhash{$xname})){ SimpleBox("Cannot merge $dname -> $xname"); return};
+        $xmlhash{$dname}{XMLTVID}=$xmlhash{$xname}{XMLTVID};
+        $xmlhash{$dname}{XMLTVname}=$xmlhash{$xname}{XMLTVname};
+        delete $xmlhash{$xname} if $xmlhash{$xname}{CallSign} eq '';
+        push @mergelog, "$dname:$xname";
+    };
+    postmortem($@) if ($@);
+}
+
+sub ReadMergeLog{
+    eval{
+        return unless (-e 'channels.merges');
+        return if (CheckOk("Use previously saved XMLTV merges?") ne 'ok');
+        unless (open  MERGES, '<channels.merges') {SimpleBox("Cannot open merge file"); return}; 
+        mylog(0,"Reading merge log");    
+        while (<MERGES>){
+            if (/\s*#/){
+            }elsif(/:/){
+                chomp;
+                MatchXMLTVdetail(split ':',$_);
+            }
+        }
+        close MERGES;  
     };
     postmortem($@) if ($@);
 }
@@ -2092,6 +2111,17 @@ sub CommitXMLTV{
         }
         TidyData();
         refresh();
+
+        #Write merge log out?
+        return if $xmltvmatchcount==0;
+        $_="XMLTVIDs have been written to the database image in memory.\n Do you now wish to save all the manual merges to a file for future use?";
+        return if (CheckOk($_) ne 'ok');
+        unless (open  MERGES, '>channels.merges') {SimpleBox("Cannot open merge file"); return}; 
+        mylog(0,"Writing merge log file");  
+        print MERGES "# Merge log written " . TimeStamp() . "\n";  
+        while ($_=shift @mergelog){print MERGES "$_\n"};
+        close MERGES;   
+        $xmltvmatchcount=0;
     };
     postmortem($@) if ($@);
 }
@@ -2196,11 +2226,7 @@ sub InterrogateBackend{
             $ChanData{$_}{Flags}='........';
             $ChanData{$_}{OldCallSign}='';
 
-            #fix 4 May 2016 for 0.28 data missing Frequency
-            #revised and removed 5 may
-            #$ChanData{$_}{Frequency}=$MplexInfo{"$ChanData{$_}{SourceId}:$ChanData{$_}{MplexId}"}{Frequency};
-
-            #count channels for multiplex listing
+                     #count channels for multiplex listing
             my $k = "$ChanData{$_}{SourceId}";
             $k .= ":$ChanData{$_}{MplexId}";
             $MplexInfo{$k}{Count}++ if (defined $MplexInfo{$k});
@@ -2221,7 +2247,7 @@ sub InterrogateBackend{
 sub Version{
     my $out= "MythTV Channel Editor\nVersion $version";
     $out .= "\n\nGPL license conditions\n\n";
-    $out .= "Phil Brady 2016";
+    $out .= "Phil Brady 2016\n\nContact via:\nPhilB at MythTV Forum";
     SimpleBox($out);
 }
 
