@@ -6,7 +6,7 @@ chedit.pl          the editor - version 1
 chedit2.pl         version 2
 scan_database.pm   a supporting perl module
 tutorial.diags     Sample UK data to allow the tutorial.
-london.hints       Sample hints file for XMLTV matching in the demo
+
 Full details and documentation can be found in the mythTV wiki at:
 
 https://www.mythtv.org/wiki/Channel_Editor   for version 1
