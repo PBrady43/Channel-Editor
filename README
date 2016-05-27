@@ -2,15 +2,14 @@ This repository holds the files for a MythTV channel editor.
 
 Files are:
 
-chedit.pl          the editor - version 1
+chedit.pl          the editor - version 1.  deprecated in favour of:
 chedit2.pl         version 2
 scan_database.pm   a supporting perl module
 tutorial.diags     Sample UK data to allow the tutorial.
 
 Full details and documentation can be found in the mythTV wiki at:
 
-https://www.mythtv.org/wiki/Channel_Editor   for version 1
-https://www.mythtv.org/wiki/User:PhilB       draft documentation version 2
+https://www.mythtv.org/wiki/Channel_Editor
 
 
 
