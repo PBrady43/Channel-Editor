@@ -8,7 +8,7 @@
 This is a channel editor for MythTV.  It uses the MythTv API inteface.
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 28 July 2016.
+Phil Brady, 30 July 2016.
 =cut
 
 
@@ -23,7 +23,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version=' Version 2.02(tkh04) issued 28 July 2016';
+my $version="Version 2.04 (tkh06) - 14 August 2016";
 
 
 # 27 May 2016    Version 2.00 released.
@@ -61,6 +61,13 @@ my $version=' Version 2.02(tkh04) issued 28 July 2016';
 #28July 2016
 #quit scan of xml files if you meet '<programme'.  makes it lots faster.
 #now version 2.02
+
+#30July 2016 version 2.03
+#With multiple sources, need to edit multiple source files to preserve the region lines eg 'channels=GRB-0001317-DEFAULT
+#also, channels put in the file are those in source file.
+
+#14 August 2016
+#xmltv source files - include all ids in input file and add 'orphans' from database.
 
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
@@ -1963,7 +1970,7 @@ channels then 'commit' them.");
 sub ChooseWildcard{
     #choose a file given a wildcard
     (my $fn, my $description)=@_;
-    mylog(0, "filename=$fn  descrip=$description");
+    mylog(0, "  ChooseWildcard: filename=$fn  descrip=$description");
     my @names; ; my $explain;my $reply;
     my $choice;
 
@@ -2133,52 +2140,79 @@ sub KillEscapes{
 
 sub CreateSDConfig{
     #
-    #write channel files
+    #write SD SOURCE.xmltv files
     #
     eval{
         track();
         mylog(0,'CreateXMLTVConfig');
 
-        my %xmls; my $id; my $outtext;
-
-        my $configfile=ChooseWildcard('~/.xmltv/*.conf ~/.mythtv/*.xmltv', 'holding json credentials');
-        return unless defined $configfile;
-
+        my %xmls; my $id; my $outtext=''; 
+        my $sourcesdone=0;
         #do each source
         for my $source (keys %sources){
+            my $errors=0;
             my $sourcename=$sources{$source}{SourceName};
+            next unless (CheckOk("Generate $sourcename.xmltv\nfor source $source?") eq 'ok');
 
-            #get ids for channels in this source
+            my $configfile=ChooseWildcard('~/.xmltv/*.conf ~/.mythtv/*.xmltv', "holding config for $sourcename");
+            next unless defined $configfile;
+
+            $sourcesdone++;
+            #get ids for channels in this source.  0=not needed, 1=needed.
             %xmls=();
             for (keys %ChanData){
-                if (($ChanData{$_}{SourceId} == $source) and
-                    ($ChanData{$_}{Visible} eq 'true') and
-                    ($ChanData{$_}{UseEIT}  eq 'false') and
-                    ($ChanData{$_}{XMLTVID} !~ /^\s*$/)) {    #not blank or just spaces
-                        $xmls{$ChanData{$_}{XMLTVID}}++;
+                if (($ChanData{$_}{SourceId} == $source) and ($ChanData{$_}{XMLTVID} !~ /^\s*$/)) {    #not blank or just spaces
+                        if (!defined $xmls{$ChanData{$_}{XMLTVID}}){$xmls{$ChanData{$_}{XMLTVID}}=0};
+                        if (($ChanData{$_}{Visible} eq 'true') and
+                            ($ChanData{$_}{UseEIT}  eq 'false')){
+                                  $xmls{$ChanData{$_}{XMLTVID}}=1;
+                        }
                 }
             }
 
-            #now generate config file for this source
+            #now edit input file for this source
 
-            unless (open IN, "<$configfile") {SimpleBox("Cannot find config file $configfile"); return};
-            open OUT, ">${sourcename}.xmltv";
-            my $count=0;
-            while (<IN>){       #copy header stuff (authentication etc)
-                last if (/^channel=/);
-                print OUT "$_";
+            unless (open IN, "<$configfile") {SimpleBox("Cannot read from config file $configfile"); return};
+            unless (open OUT, ">${sourcename}.xmltv") {SimpleBox("Cannot write to {sourcename}.xmltv"); return};;
+            my $count=0; my $char;
+            mylog(0,"  Reading config file $configfile; writing ${sourcename}.xmltv");
+            while (<IN>){
+                chomp;
+                if (/^channel[=!](.*)/){
+                    $id=$1;
+                    if (!defined $xmls{$id}){$xmls{$id}=0};
+                     
+                    if ($xmls{$id} >1){
+                        $errors++;
+                        mylog(0, "  xmltvid $id duplicated in source file");
+                    }
+                    $char= ($xmls{$id} %2)?'=':'!';
+                    print OUT "channel$char$id\n";
+                    $count++; $xmls{$id} = 2+($xmls{$id} %2);   #indicate dealt with this before.
+                }
             }
             close IN;
-            for (sort keys %xmls){     #now put channels in
-                print OUT "channel=$_\n";
-                $count++;
+
+            #now check for ids in database but not input file:
+            for $id (sort keys %xmls){
+                if ($xmls{$id} <2){
+                    #entry in database but not input file
+                    $char= ($xmls{$id} %2)?'=':'!';
+                    print OUT "channel$char$id\n";
+                    $errors++; $count++;
+                    mylog(0,"  xmltvid $id added - found in database but not file.");
+                }
             }
-            
             close OUT;
-            $outtext .= "$count active channels in ${sourcename}.xmltv\n";
-            mylog(0,"    $count active channels in ${sourcename}.xmltv");
+            if ($errors){SimpleBox("$errors errors found - please check log")};
+            $outtext .= "$count channels in ${sourcename}.xmltv\n";
+            mylog(0,"  $count channels in ${sourcename}.xmltv");
         }
-        SimpleBox("Source files written to current directory:\n$outtext\nPlease check then copy these to your SD config directory");
+        return if ($sourcesdone == 0);
+        
+        $outtext .= "\nPlease check log and files.  Copy these to ~/.mythtv if error free";
+        SimpleBox("$outtext\n");
+        
     };
     postmortem($@) if ($@);
 }
