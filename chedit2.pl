@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-
 #for OSX, first line needs to be:
 #!/opt/local/bin/perl5.22 -w
 
@@ -23,7 +22,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version="Version 2.04 (tkh06) - 14 August 2016";
+my $version="Version 2.05 (tkh07) - 4 Sept 2016";
 
 
 # 27 May 2016    Version 2.00 released.
@@ -68,6 +67,10 @@ my $version="Version 2.04 (tkh06) - 14 August 2016";
 
 #14 August 2016
 #xmltv source files - include all ids in input file and add 'orphans' from database.
+
+#4Sept 2016   Version 2.05
+#Commfree cannot be changed via the API.  Disabled Commfree changing code (in %columns, SingeEdit, bulk edit, import, export)
+# 
 
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
@@ -134,7 +137,7 @@ my %columns = (    #column heading, format for view, flags (R=read backend,W=che
     Sort       =>  [" Sort  ", "%7d",''],
     Visible    =>  ['','','RXIE'],
     UseEIT     =>  ['','','RXIE'],
-    CommFree   =>  ['','','RXIE'],
+    CommFree   =>  ['','','RXi'],
     OldCallSign=>  ['  OldCallSign', '%-28s', ''],   #set to RWXIC if callsign changed
    'Src:Mpx'   =>  ['','','C'],
     NewState   =>  ['','',''],           # ) legacy export file parameters
@@ -143,6 +146,7 @@ my %columns = (    #column heading, format for view, flags (R=read backend,W=che
     ChannelName=>  ['  ChannelName', '', 'RWExIC'],
     Frequency  =>  ['','','i'],
 );
+#  was CommFree   =>  ['','','RXIE'],
 
 my @columnswanted = qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
 my @customcolumns = ();
@@ -607,7 +611,7 @@ sub EditSingle{
               -label        => $tidylabel) -> pack(-anchor => 'e');
         }
         
-        my $text="Hint:  Valid values for:\n CommFree are: $CommFreeTrue or $CommFreeFalse,";
+        my $text="Hint:  Valid values for:";   #\n CommFree are: $CommFreeTrue or $CommFreeFalse,";
         $text .= "\nUseEIT are: true or false,\nVisible are: true, false or delete\n";
         $box -> add('Label', -text=> $text) ->pack;
         $box -> focus;
@@ -973,8 +977,8 @@ sub BulkEditBox{
                 -> pack(-anchor => 'w');
         $box -> add('Radiobutton', -text => "UseEIT",   -variable  =>\$ButtonChosen, -value=>'N:UseEIT:true:false:E:2') 
                 -> pack(-anchor => 'w');
-        $box -> add('Radiobutton', -text => "CommFree", -variable  =>\$ButtonChosen, 
-                -value=>"N:CommFree:$CommFreeTrue:$CommFreeFalse:C:3") -> pack(-anchor => 'w');
+        #$box -> add('Radiobutton', -text => "CommFree", -variable  =>\$ButtonChosen, 
+        #        -value=>"N:CommFree:$CommFreeTrue:$CommFreeFalse:C:3") -> pack(-anchor => 'w');
 
         $box -> add('Label', -text=> "\n--- OR --- \n\nchoose item below, give new text and click 'set' ---\n\n --- OR ---\n\nGive numeric value (eg 65 or -65) then 'Add' ---\n\n  Use with care!!")->pack;
 
