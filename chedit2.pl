@@ -22,7 +22,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version="Version 2.05 (tkh07) - 4 Sept 2016";
+my $version=" 2.07 (tkh09) - 31 Jan 2017";
 
 
 # 27 May 2016    Version 2.00 released.
@@ -71,7 +71,11 @@ my $version="Version 2.05 (tkh07) - 4 Sept 2016";
 #4Sept 2016   Version 2.05
 #Commfree cannot be changed via the API.  Disabled Commfree changing code (in %columns, SingeEdit, bulk edit, import, export)
 # 
-
+#6Jan2017     Version 2.06
+# --help added to command interface.
+#
+#31 Jan 2017  Version 2.07
+#Fixed uninitialised variables in EditSingle - remnants of changing CommFee.
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
@@ -81,7 +85,7 @@ vec($showdata, 2**18-1, 8)=0;
 $showdata = '';
 
 my $backend; my $spoof; my %ChanData; my %MplexInfo;my %sources;my $nodemo=0; my $demo=1;
-my $Extra;
+my $Extra; my $help=0;
 my %xmlhash;     #for matching xmltv entries 
 my @mergelog=();  #manual matches
 my $xmltvmatchcount=0;
@@ -96,7 +100,10 @@ GetOptions("backend:s"      => \$backend,
            "spoof:s"        => \$spoof,
            "demo!"          => \$demo,
            "extra:s"        => \$Extra,
+           "help"           => \$help,
           );
+
+GiveCLIHelp() if ($help);
 
 GetBackendAddress();
 my @CustomSortRules=();
@@ -621,7 +628,8 @@ sub EditSingle{
 
         #check that we have tidy user input
 
-       for (qw/Visible UseEIT CommFree/){
+       #was:  for (qw/Visible UseEIT CommFree/){   Removed 31/1/17 - a CommFree remnant
+       for (qw/Visible UseEIT/){
             if ($hash{$_} =~ /^t/i){$hash{$_}='true'};    #accept just first character
             if ($hash{$_} =~ /^d/i){$hash{$_}='delete'};
             if ($hash{$_} =~ /^f/i){$hash{$_}='false'};
@@ -636,10 +644,11 @@ sub EditSingle{
             SimpleBox("Invalid value $hash{UseEIT} for UseEIT ignored");
             $hash{UseEIT}=$ChanData{$id}{UseEIT};
         }
-        unless (($hash{CommFree} eq $CommFreeTrue) or ($hash{CommFree} eq $CommFreeFalse)){
-            SimpleBox("Invalid value $hash{CommFree} for CommFree ignored");
-            $hash{CommFree}=$ChanData{$id}{CommFree};
-        }
+        #removed 31/1/2017 You cannot change CommFree!
+        #unless (($hash{CommFree} eq $CommFreeTrue) or ($hash{CommFree} eq $CommFreeFalse)){
+        #    SimpleBox("Invalid value $hash{CommFree} for CommFree ignored");
+        #    $hash{CommFree}=$ChanData{$id}{CommFree};
+        #}
 
         #prepare undo
         ClearUflags();  push @UndoPointer, scalar @Undo; 
@@ -2354,9 +2363,28 @@ sub InvalidExtra{
 sub Version{
     my $out= "MythTV Channel Editor\nVersion $version";
     $out .= "\n\nGPL license conditions\n\n";
-    $out .= "Phil Brady 2016\n\nContact via:\nPhilB at MythTV Forum";
+    $out .= "Phil Brady 2016~2017\n\nContact via:\nPhilB at MythTV Forum\n";
+    $out .= "or phil dot brady at hotmail dot co dot uk";
     SimpleBox($out);
 }
+
+sub GiveCLIHelp{
+    print "\nThis is a channel editor for MythTV.  It uses the MythTv API inteface.
+    
+    Calling parameters are:
+      --backend <backend address>
+      --spoof   <file with tutorial or other backend data>
+      --demo    prohibit database updates
+      --nodemo  Allow database up-dating
+      --extra   <extra parameter to show from backend>
+      --help
+      
+      For full details and a tutorial see:
+      www.mythtv.org/wiki/Channel_Editor
+      
+    ";
+    exit 0;
+} 
 
 
 sub helpwiki{
