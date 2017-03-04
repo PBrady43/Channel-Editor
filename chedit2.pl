@@ -1,13 +1,13 @@
 #!/usr/bin/perl -w
 
 #for OSX, first line needs to be:
-#!/opt/local/bin/perl5.22 -w
+#!/opt/local/bin/perl5.24 -w
 
 =pod
-This is a channel editor for MythTV.  It uses the MythTv API inteface.
+This is a channel editor for MythTV.  It uses the MythTv API interface.
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 30 July 2016.
+Phil Brady, 4 March 2017.
 =cut
 
 
@@ -22,7 +22,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version=" 2.07 (tkh09) - 31 Jan 2017";
+my $version=" 2.09 (tki02) 4 March 2017";
 
 
 # 27 May 2016    Version 2.00 released.
@@ -77,11 +77,28 @@ my $version=" 2.07 (tkh09) - 31 Jan 2017";
 #31 Jan 2017  Version 2.07
 #Fixed uninitialised variables in EditSingle - remnants of changing CommFee.
 
+#20~28 Feb 2017
+#respond to failures with very large channel counts
+# trap keystrokes
+# remove sidebar scrolling
+# only put a pane full of data in label
+# compute new stsrt position
+# trap scrolling - use tick mechanis
+# up/down mechanisms
+# Note shift key press/release
+# new routines event, resize, Keyrelease
+# Modified refresh, showlog, showmultiplexes, showxml
+# $showdata reduced in size 
+# 3/3/17  fix for negative $pad in showxmltv
+# retain postition in xml match screen over matches
+# 4 march 2017.  Version 20.9 released.
+
+
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
 
 my $showdata='';
-vec($showdata, 2**18-1, 8)=0;
+vec($showdata, 2**13-1, 8)=0;
 $showdata = '';
 
 my $backend; my $spoof; my %ChanData; my %MplexInfo;my %sources;my $nodemo=0; my $demo=1;
@@ -122,11 +139,34 @@ my $text='Fully functional mode.';
    $text="Running in demo mode." if $demo;
 
 my $main; my $font;
-my $headings; my $pane; my $pane2;
+my $headings; my $pane;
 my @selection=();   #used in edits.
 my $postmortemcount=0;
 
 
+my %scroll=(
+    ticker      => 0,      #used in resizing
+    height      => 32,     #height of label in 14 font lines
+    first       => 0,
+    total       => 600,
+    view        => 0,
+    one         => 1,
+    zero        => 0,
+    Shifting    => '', 
+    Home        => ['zero',0,'zero'],                  # compute new first line  as a + (b*c) 
+    End         => ['total', -1, 'height'],
+    ShiftHome   => ['zero',0,'zero'],  
+    ShiftEnd    => ['total', -1, 'height'],
+    Prior       => ['first', -1, 'height'],
+    Next        => ['first',  1, 'height'],
+    ShiftNext   => ['first', 10, 'height'],
+    ShiftPrior  => ['first',-10, 'height'],
+    Up          => ['first', -1, 'one'],
+    Down        => ['first',  1, 'one'],
+    ShiftUp     => ['first',-10, 'one'],
+    ShiftDown   => ['first', 10, 'one'],
+    Resize      => ['first',  0, 'one'],
+    );
 
 #column controls
 my $ViewChoice='Normal';
@@ -153,18 +193,10 @@ my %columns = (    #column heading, format for view, flags (R=read backend,W=che
     ChannelName=>  ['  ChannelName', '', 'RWExIC'],
     Frequency  =>  ['','','i'],
 );
-#  was CommFree   =>  ['','','RXIE'],
 
 my @columnswanted = qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
 my @customcolumns = ();
  
-
-#control hash for sorting
-#[0]=1 if main menu item, =2 if create custom rule
-# [1] sort items
-# [2] type of sorting:  0=ChanId, 1=numeric, 2=string, 3=state, 99=invalid
-
-
 my %sortitems =(
    ChanId           => [3,'id', 0],
   'Channel No'      => [3,'Sort', 1],
@@ -190,8 +222,6 @@ my %sortitems =(
    id               => [0,'',0],
    Visible          => [0, 'Visible', 2],
 );
-#$sortitems{$Extra}=[3,$Extra, 1] if $Extra;
-
 
 eval{
     #create main window
@@ -231,35 +261,32 @@ eval{
     track('creating view menu');
     my $ViewMenu= $menubar-> Menubutton(-text =>"View")
                           -> pack(-side => "left");
-       $ViewMenu -> radiobutton(-label => "Show default columns", -variable=>\$ViewChoice, -value=>'Normal',
-                                -command=> \&ChooseDisplay);
-       $ViewMenu -> radiobutton(-label => "Show Channelname",    -variable=>\$ViewChoice, -value=>'ChannelName',
-                                -command=> \&ChooseDisplay);
+    $ViewMenu -> radiobutton(-label => "Show default columns", -variable=>\$ViewChoice, -value=>'Normal',
+                            -command=> \&ChooseDisplay);
+    $ViewMenu -> radiobutton(-label => "Show Channelname",    -variable=>\$ViewChoice, -value=>'ChannelName',
+                            -command=> \&ChooseDisplay);
 
-       if (( $Extra) && (!exists $columns{$Extra})){
-          $ViewMenu -> radiobutton(-label => "Show $Extra", -variable=>\$ViewChoice, 
-                            -value=>'Extra', -command=> \&ChooseDisplay);
-       }
-       $ViewMenu -> radiobutton(-label => "Show custom columns", -variable=>\$ViewChoice, -value=>'custom',
-                                -command=> \&ChooseDisplay);
-       $ViewMenu -> separator();
-       $ViewMenu -> radiobutton(-label => "Show multiplexes", -variable=>\$ViewChoice, -value=>'Mpxs',
-                                              -command      => \&ListMultiplexes);              
-       $ViewMenu -> radiobutton(-label => "Show log", -variable=>\$ViewChoice, -value=>'Log',
-                                                      -command      => \&ShowLog);
-       $ViewMenu ->  separator();
-       $ViewMenu ->  radiobutton(-label=>"Define Custom columns", -variable=>\$ViewChoice, -command=> sub{&CreateColumns});
+    if (( $Extra) && (!exists $columns{$Extra})){
+      $ViewMenu -> radiobutton(-label => "Show $Extra", -variable=>\$ViewChoice, 
+                        -value=>'Extra', -command=> \&ChooseDisplay);
+    }
+    $ViewMenu -> radiobutton(-label => "Show custom columns", -variable=>\$ViewChoice, -value=>'custom',
+                             -command=> \&ChooseDisplay);
+    $ViewMenu -> separator();
+    $ViewMenu -> radiobutton(-label => "Show multiplexes", -variable=>\$ViewChoice, -value=>'Mpxs',
+                                          -command      => \&ListMultiplexes);              
+    $ViewMenu -> radiobutton(-label => "Show log", -variable=>\$ViewChoice, -value=>'Log',
+                                                  -command      => \&ShowLog);
+    $ViewMenu ->  separator();
+    $ViewMenu ->  radiobutton(-label=>"Define Custom columns", -variable=>\$ViewChoice, -command=> sub{&CreateColumns});
 
-  
-
-  
     track('creating sort menu');
     my $SortMenu= $menubar-> Menubutton(-text =>"Sort") -> pack(-side => "left");
     for (sort keys %sortitems){
-         if (($sortitems{$_}[0] % 2) == 1){
-            $SortMenu -> radiobutton(-label => "Sort by $_", -variable=>\$SortChoice, -value=> $_,
-                                -command => \&NewSort);
-         }
+       if (($sortitems{$_}[0] % 2) == 1){
+           $SortMenu -> radiobutton(-label => "Sort by $_", -variable=>\$SortChoice, -value=> $_,
+                            -command => \&NewSort);
+       }
     }
    
     $SortMenu ->  radiobutton(-label =>"Custom sort", -variable =>\$SortChoice, -value=>'custom', -command =>\&NewSort);
@@ -283,7 +310,7 @@ eval{
     track('creating xmltv menu');
     my $XMLTVmenu =  $menubar -> Menubutton(-text =>"XMLTV", -menuitems  => [
           [ Button => "Import XMLTV", -command   => \&ImportXMLTV],
-          [ Button => "Show matches",   -command   => sub{&ShowXMLTV(1)}],
+          [ Button => "Show matches",   -command   => sub{&ShowXMLTV()}],
           [ Button => "Merge",        -command   => \&MatchXMLTV],
           [ Button => "Commit",       -command   => \&CommitXMLTV],
           [ Button => "Create SD source file(s)", -command   => \&CreateSDConfig],
@@ -302,21 +329,20 @@ eval{
     track('creating headings');
     $headings=$main ->Label(-text => '', -font => $headerfont)->pack(-anchor => "nw");
 
-    #create the scrolled pane 
-    track('creating scrolled pane');
-    $pane = $main->Scrolled("Pane", Name => 'fred',
-            -scrollbars => 'e',
-            -sticky     => 'we',
-            -gridded    => 'y',
-            );
-       $pane->Frame;
-       $pane->pack(-expand => 1,
-                    -fill => 'both');
-
     #create label for content
     track('creating content label');
-    $pane2= $pane -> Label(-text => '', -justify => 'left', -font => $font)-> pack(-side=>"left");   #side was left
+    $pane= $main -> Label(-text => '', -justify => 'left', -font => $font)-> pack(-side=>"left");
+     
+    #bind key presses and resizes for scrolling
+    $main->bind("<KeyPress>" => sub{event($main->XEvent->K)});
+    $main->bind("<KeyRelease>" => \&KeyRelease);
+    $main->bind("<Configure>" => sub {$scroll{ticker}=2});
+    
+    #start ticker (to detect end of resizing).
+    $main-> repeat(300, sub{return if ($scroll{ticker}==0);
+                         if ($scroll{ticker}-- ==1){ReSize()}});
 
+ 
     #Off we go!
 
     preamble();
@@ -336,6 +362,68 @@ postmortem($@) if ($@);
 exit 0;
 
 
+sub ReSize{
+    eval{
+        return if ($scroll{view}==0);;
+        my $height=int((3 + $pane->height)/22);
+        return if ($height == $scroll{height});  #ignore false report
+        $scroll{height}=$height;
+        mylog(0,"Resize $height");
+        event('Resize');
+    };
+    postmortem($@) if ($@);     
+}
+
+sub KeyRelease{
+    if ($main->XEvent->K =~ /^Shift_/){$scroll{Shifting}= ''};
+}
+
+sub event{
+    eval{
+        # expect Home, End, Prior, Next, Up, Down, Resize. See %scroll. 
+        my $event=$_[0];
+        if ($event =~ /^Shift_/){$scroll{Shifting}= 'Shift'; return};
+        
+        $event=$scroll{Shifting}.$event;
+        return unless defined($scroll{$event});
+        #return unless (length($event)>1);        #avoids 0, 1, 5 etc input
+        
+        #if log needed, check log size
+        if ($scroll{view}==3){ $scroll{total}=scalar(@log)};
+        
+        #recompute new first line
+        my $base=$scroll{$scroll{$event}[0]};
+        my $mpy=$scroll{$event}[1];
+        my $step=$scroll{$scroll{$event}[2]};
+
+        my $f= $base + ($mpy * $step);  #new first line
+         
+        #limit checks on first
+        my $last=$scroll{total}-1;
+        if ($f>$last){$f=$last};
+        $f=0 if ($f<0);
+        
+        $scroll{first}=$f;
+        track("event: $event first=$f");
+        
+        $_=$scroll{view};
+        if (/0/){ #during startup - no action
+        }elsif (/1/){
+            refresh($f);   #display channels
+        } elsif (/2/){
+            ListMultiplexes($f);
+        
+        } elsif (/3/){
+            ShowLog($f);
+            
+        } elsif (/4/){
+            ShowXMLTV($f);
+        }else{
+            postmortem("Unexpected view $scroll{view} in event");
+        }
+    };
+    postmortem($@) if ($@);
+}
 
 sub GetBackendAddress{
 
@@ -385,6 +473,7 @@ sub preamble{
     eval{
         my $text="unset";
         track();
+        ReSize();    #measure height of pane
         if (defined $spoof){$demo=1; $text=$spoof};
         mylog(0, "$0  Version=$version, demo=$demo,");
         mylog(0, "    spoof=$text, os=$^O");
@@ -395,7 +484,7 @@ sub preamble{
               $Extra='';
         }
         mylog(0,"Extra=$Extra");
-        &InterrogateBackend;
+        &InterrogateBackend;        
     };
     postmortem($@) if ($@);
 }
@@ -722,31 +811,21 @@ sub mylog{
 sub ShowLog{
     eval{
         track();
-        mylog(0,"ShowLog");
+        my $first=$_[0];
+        $first ||=0;
+        unless (defined($first)){mylog(0,'ShowLog')};
+        $scroll{first}=$first;
+        $scroll{view}=3;
+        $scroll{total}=scalar(@log);
+        (my $last, my $pad)=GiveLimits();
+        
         &ClearHeading;
-        my $text=join "\n", @log;
-
-#author's diagnostic aids
-#       $text .= "\nTracking\n";
-#       $text .=join "\n", @track;
-#       $text .= "\nUndo stack\n";
-#       $text .=join "\n", @Undo;
-
-#$#text .="\n";
-#for (sort keys %columns){
-#    $text .= " $_  $columns{$_}[2]  $columns{$_}[1] $columns{$_}[0]\n";
-#}
-
-#$text .="\n";
-#for (sort keys %sortitems){
-#    $text .= " $_  $sortitems{$_}[0]  $sortitems{$_}[1] $sortitems{$_}[2]\n";
-#}
- 
-#        $text .= "left=$ChNoLeft\n";
-#        $text .= "right $ChNoRight\n";
-
-        $pane2 -> configure(-text => $text, -anchor =>"nw", -justify=>'left'); 
-
+        my $text='';
+        for ($first .. $last){
+            $text.= $log[$_] ."\n" ;
+        }
+        $text .=  "\n" x $pad;
+        $pane -> configure(-text => $text, -anchor =>"nw", -justify=>'left'); 
      };
      postmortem($@) if ($@);  
 }
@@ -1528,7 +1607,8 @@ sub DeleteChannel{
 
 sub exitscript{
     exit if scalar @Undo ==0;
-    exit if (CheckOk('Changes have been made.  Really exit?') eq 'ok');
+    return if (CheckOk('Changes have been made.  Really exit?') ne 'ok');
+    exit 0;
 }
 
 
@@ -1549,25 +1629,47 @@ sub ListMultiplexes{
     eval{
         track();
         mylog(0,"ListMultiplexes");
+        
+        my $first=$_[0];
+        $first ||=0;
+        unless (defined($first)){mylog(0,'ListMultiplexes')};
+        $scroll{first}=$first;
+        $scroll{view}=2;
+        $scroll{total}=scalar(keys %sources) + scalar(keys %MplexInfo) +5;
+        
+        (my $last,my $pad)=GiveLimits();
+        
         &ClearHeading;
-        #list sources
-        my $out=" Source   Name\n";
+        
+        #Generate array of full data
+        
+        my @all; my $out;
+        
+        push @all, " Source   Name";
         for (sort keys %sources){
-            $out .= "    $_     $sources{$_}{SourceName}\n";
+            push @all, "    $_     $sources{$_}{SourceName}";
         }
         my $total=0;
         #list multiplexes
-        $out .= "\n Source  Mplex   Freq (MHz)    Channels  Standard\n";
+        push @all,'';
+        push @all," Source  Mplex   Freq (MHz)    Channels  Standard";
         for (sort {$MplexInfo{$a}{sort}  <=> $MplexInfo{$b}{sort}} keys %MplexInfo){
             my ($src, $mpx) =split ":", $_;
-            $out .= sprintf "  %3d    %3d     ",$src,$mpx;
+            $out= sprintf "  %3d    %3d     ",$src,$mpx;
             $out .= sprintf " %7.3f  ", $MplexInfo{$_}{Frequency}/1000000;
             $out .= sprintf "  %7d     ", $MplexInfo{$_}{Count};
-            $out .= "$MplexInfo{$_}{Standard}\n";
+            $out .= "$MplexInfo{$_}{Standard}";
+            push @all, $out;
             $total += $MplexInfo{$_}{Count};
         }
-        $out .= "\n Total channels:    $total\n";
-        $pane2 -> configure(-text => $out, -anchor =>"nw", -justify=>'left');
+        push @all,'';
+        push @all," Total channels:    $total";
+        push @all,'';
+  
+        $out='';
+        for ($first .. $last){$out .= $all[$_] . "\n"};
+        $out .= "\n" x $pad;
+        $pane -> configure(-text => $out, -anchor =>"nw", -justify=>'left');
     };
     postmortem($@) if ($@);
 }
@@ -1730,11 +1832,36 @@ sub CreateColumns{
 
 }
 
-
+sub GiveLimits{
+    #returns (last item, pad lines)
+    my $first=$scroll{first};
+    
+    #work out last item
+    my $last=$first+$scroll{height}-1;
+    if ($last>$scroll{total}-1){$last=$scroll{total}-1};
+    
+    #how many blank lines at end?
+    my $pad= $scroll{height}-$first+$last-1;  #to fill pane
+    $pad+=10;    #to reduce screen flashing after resize
+    return ($last, $pad);
+}
+    
+    
 sub refresh{
 
    eval{
        track();
+       #set up for scrolling
+       my $first=$_[0];
+       unless (defined($first)){mylog(0,'Refreshing')};
+       $first ||=0;
+       $scroll{first}=$first;
+       $scroll{view}=1;
+       $scroll{total}=scalar(@sorted);
+       
+       #work out last
+       (my $last, my $pad)=GiveLimits();
+       
        $showdata='';
        my $format='%4d'; my $k; 
        my @values; my $heading =' Row';
@@ -1749,8 +1876,9 @@ sub refresh{
 
         #now try to print real data
 
-       my $row=0; my $out='';
-       for my $id (@sorted){
+       my $row=$first; my $out='';my $id;
+       for my $pointer ($first .. $last){
+            $id = $sorted[$pointer];
             @values=($row++);
             for (@columnswanted){
                 track("id=$id  column=$_");
@@ -1766,9 +1894,8 @@ sub refresh{
             }
             $showdata .= sprintf "$format\n", @values;
        }
-       $k= 30 - (keys @sorted);
-       if ($k>0) {$showdata .= "\n" x $k};  #pad vertically to eliminate gap at top.
-       $pane2 -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');
+       $showdata .= "\n" x $pad;   #add extra blanks at end (otherwise height in resizing fails)
+       $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');
     };
     postmortem($@) if ($@);
 }  
@@ -1828,7 +1955,7 @@ sub CreateCustomSort{
 
 sub xmlkey{
     (my $k)= @_;
-    #index the xmlt matchinh hash with these keys    
+    #index the xmlt matching hash with these keys    
     $k =~s/[\s():]//g; $k =lc($k);
     $k=~ s/plus1hour/+1/;
     $k=~s/plus/+/;
@@ -1971,7 +2098,7 @@ sub ImportXMLTV{
         for (keys %xmlhash){
            $matches++ if (($xmlhash{$_}{XMLTVname} ne '') and ($xmlhash{$_}{CallSign} ne ''));
         }
-        ShowXMLTV(0);
+        ShowXMLTV();
         mylog(0,"    $matches channels have been matched");
         SimpleBox("$matches channels have been matched.
 Please manually merge further 
@@ -2026,8 +2153,17 @@ sub ChooseWildcard{
 
 sub ShowXMLTV{
     eval{
-        mylog(0,"ShowXMLTV") if $_[0];track();
-
+        track();
+        #set up for scrolling
+        my $first=$_[0];
+        unless (defined($first)){mylog(0,'ShowXMLTV')};
+        $first ||=0;  $scroll{first}=$first;
+        $scroll{view}=4;
+        $scroll{total}=scalar(keys %xmlhash);
+       
+       #work out last
+       (my $last, my $pad)=GiveLimits();
+        
         my $count; 
         my $max=13;   #width of file callsign
         for (keys %xmlhash){
@@ -2039,12 +2175,16 @@ sub ShowXMLTV{
         my $format= $columns{$XMLTVname}[1] . '%7s  %-' . $max .'s %-20s';
 
         my $header = sprintf $format, $XMLTVname, 'Row' , 'File_CallSign', 'XMLTVID';
-        for (sort keys %xmlhash){
+        my @temp=sort keys %xmlhash;
+        for my $i ($first .. $last){
+            $_=$temp[$i];
             $showdata .= sprintf "$format\n", $xmlhash{$_}{CallSign}, 
-                     $count++, $xmlhash{$_}{XMLTVname}, $xmlhash{$_}{XMLTVID};
+            #         $count++, $xmlhash{$_}{XMLTVname}, $xmlhash{$_}{XMLTVID};
+                     $i, $xmlhash{$_}{XMLTVname}, $xmlhash{$_}{XMLTVID};
         }
+        $showdata .= "\n" x $pad;
         $headings -> configure(-text => $header, -anchor =>"nw", -justify=>'left');
-        $pane2 -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');
+        $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');
         return;
     };
     postmortem($@) if ($@);
@@ -2055,7 +2195,7 @@ sub MatchXMLTV{
  
     eval{
         mylog(0,"MatchXMLTV");track();
-        ShowXMLTV(0);
+        ShowXMLTV() if ($scroll{view} !=4);
         my $text="Match database callsign to XMLTV name.\n (Give row for left column and row for right)\n eg 25:24";
         my ($reply, $input)=GetInput($text,'');
         return unless ($reply eq 'ok');
@@ -2067,7 +2207,7 @@ sub MatchXMLTV{
         my ($dname, $xname) = (sort keys %xmlhash)[$d, $x];
         return unless (&CheckOk("Matching: $xmlhash{$dname}{CallSign} -> $xmlhash{$xname}{XMLTVname}") eq 'ok');
         MatchXMLTVdetail($dname, $xname);
-        ShowXMLTV(0);
+        ShowXMLTV($scroll{first});
         $xmltvmatchcount++;
     };
     postmortem($@) if ($@);
@@ -2312,9 +2452,9 @@ sub InterrogateBackend{
             #add in to main hash
             %ChanData = (%ChanData, %temp);
         }
-
+        
         #post-process channels:
-  
+
         foreach (keys %ChanData){
             track("id=$_");
             #new state code
@@ -2342,7 +2482,7 @@ sub InvalidExtra{
         (my $temp)=@_;
         my %items;
         GetAllFields(%items, $temp, '<ChannelInfo>', '</ChannelInfo>');
-        mylog(1,"Error:  --extra parameter '$Extra' not found in database.");
+        print "Error:  --extra parameter '$Extra' not found in database.\n";
         print "Valid ones for this backend are:\n";
         my $count=1;
         for (sort keys %items){
@@ -2364,7 +2504,8 @@ sub Version{
     my $out= "MythTV Channel Editor\nVersion $version";
     $out .= "\n\nGPL license conditions\n\n";
     $out .= "Phil Brady 2016~2017\n\nContact via:\nPhilB at MythTV Forum\n";
-    $out .= "or phil dot brady at hotmail dot co dot uk";
+    $out .= 'or phildotbrady@hotmaildotcodotuk';
+    $out =~ s/dot/./g;
     SimpleBox($out);
 }
 
