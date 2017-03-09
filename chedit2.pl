@@ -7,7 +7,7 @@
 This is a channel editor for MythTV.  It uses the MythTv API interface.
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 4 March 2017.
+Phil Brady, 9 March 2017.
 =cut
 
 
@@ -22,7 +22,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version=" 2.09 (tki02) 4 March 2017";
+my $version=" 2.10 (tki03) 9 March 2017";
 
 
 # 27 May 2016    Version 2.00 released.
@@ -91,8 +91,11 @@ my $version=" 2.09 (tki02) 4 March 2017";
 # $showdata reduced in size 
 # 3/3/17  fix for negative $pad in showxmltv
 # retain postition in xml match screen over matches
-# 4 march 2017.  Version 20.9 released.
-
+# 4 march 2017.  Version 2.09 released.
+#
+#9 March version 2.10.
+#  Correctly measure linespace and hence no of lines fittinmg in the label
+#  Allow font changing +, - and b
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
@@ -128,17 +131,15 @@ my @CustomDescription=();
 my $SortChoice = 'ChanId';
 my $LastSortChoice=$SortChoice;
 
-
 #Extra defaults
 $Extra||='';
-
 
 my $CommFreeTrue='true'; my $CommFreeFalse='false';    #but 1 & 0 prior to 0.28
 
 my $text='Fully functional mode.';
    $text="Running in demo mode." if $demo;
 
-my $main; my $font;
+my $main; my $font; my $headerfont;
 my $headings; my $pane;
 my @selection=();   #used in edits.
 my $postmortemcount=0;
@@ -152,7 +153,9 @@ my %scroll=(
     view        => 0,
     one         => 1,
     zero        => 0,
-    Shifting    => '', 
+    Shifting    => '',
+    size        => 14,
+    weight      => 1, 
     Home        => ['zero',0,'zero'],                  # compute new first line  as a + (b*c) 
     End         => ['total', -1, 'height'],
     ShiftHome   => ['zero',0,'zero'],  
@@ -167,7 +170,7 @@ my %scroll=(
     ShiftDown   => ['first', 10, 'one'],
     Resize      => ['first',  0, 'one'],
     );
-
+    
 #column controls
 my $ViewChoice='Normal';
 my $LastChannelView='Normal';
@@ -234,10 +237,10 @@ eval{
 
     $font = $main->fontCreate('body',
        -family=>'courier',
-       -weight=>'normal',
+       -weight=>'bold',
        -size=> 14);
 
-    my $headerfont = $main->fontCreate('header',
+    $headerfont = $main->fontCreate('header',
        -family=>'courier',
        -weight=>'bold',
        -size=>14);
@@ -365,10 +368,10 @@ exit 0;
 sub ReSize{
     eval{
         return if ($scroll{view}==0);;
-        my $height=int((3 + $pane->height)/22);
+        my $height=int((3 + $pane->height)/$pane->fontMetrics($font, '-linespace'));
         return if ($height == $scroll{height});  #ignore false report
         $scroll{height}=$height;
-        mylog(0,"Resize $height");
+        mylog(0,"Resize height=$height");
         event('Resize');
     };
     postmortem($@) if ($@);     
@@ -383,14 +386,23 @@ sub event{
         # expect Home, End, Prior, Next, Up, Down, Resize. See %scroll. 
         my $event=$_[0];
         if ($event =~ /^Shift_/){$scroll{Shifting}= 'Shift'; return};
-        
+        my $more=0;
+        if ($event eq 'plus'){$scroll{size}+=2; $more=1};   #bigger font
+        if ($event eq 'minus'){$scroll{size}-=2; $more=1};   #smaller font
+        if ($event eq 'b'){$scroll{weight}=1-$scroll{weight}; $more=1};   #toggle bold/non bold
+        if ($more){
+            $scroll{Shifting}='';
+            $event='ReSize';
+            $pane->fontConfigure($font, -size=> $scroll{size}, -weight=> qw(normal bold)[$scroll{weight}]);
+            $main->fontConfigure($headerfont, -size=> $scroll{size}, -weight=> 'bold');
+            ReSize();
+            return;
+        }
         $event=$scroll{Shifting}.$event;
         return unless defined($scroll{$event});
-        #return unless (length($event)>1);        #avoids 0, 1, 5 etc input
-        
+                
         #if log needed, check log size
         if ($scroll{view}==3){ $scroll{total}=scalar(@log)};
-        
         #recompute new first line
         my $base=$scroll{$scroll{$event}[0]};
         my $mpy=$scroll{$event}[1];
@@ -405,7 +417,6 @@ sub event{
         
         $scroll{first}=$f;
         track("event: $event first=$f");
-        
         $_=$scroll{view};
         if (/0/){ #during startup - no action
         }elsif (/1/){
@@ -548,7 +559,7 @@ sub EditSelection{
         mylog(0,'  changes done');
         #now refresh screen
         TidyData();
-        refresh();
+        refresh($scroll{first});
     };
     postmortem($@) if ($@);
 }
@@ -758,7 +769,7 @@ sub EditSingle{
         TidyData();
 
         #Show data
-        refresh();
+        refresh($scroll{first});
 
         $text=($count)?"$text\nThe change(s) can be undone":'';
         SimpleBox("$count items changed.\n" . $text);
@@ -792,7 +803,7 @@ sub EditUndo{
             }
         }
         TidyData();
-        refresh();
+        refresh($scroll{first});
         $exportcheck=-1 if $exportcheck>scalar @Undo;    #check for export reminder
     };
     postmortem($@) if ($@);   
@@ -906,13 +917,23 @@ sub Diagnostics{
    
     #show log
     my $filename= 'chedit'. TimeStamp() .'.diags'; 
-    #$filename='channel.diags';
-
+ 
     my $temp;
+    
+    for (sort keys %scroll){
+        if (ref($scroll{$_}) ne 'ARRAY'){printf "%-8s   %-8s\n", $_, $scroll{$_}};
+    }
+    exit 0;
+    
 
     unless (open DI, ">$filename") {SimpleBox("Cannot open $filename $!"); return};
     print DI "##log\n";
     print DI join("\n", @log), "\n";
+    
+    print DI "Scroll settings\n";
+    for (sort keys %scroll){
+        if (ref($scroll{$_}) ne 'ARRAY'){printf "%-8s   %-8s\n", $_, $scroll{$_}};
+    }
 
     #enough if spoof input
     if (!defined $spoof){
@@ -1422,10 +1443,10 @@ sub Import{
         if  ($queries){
             $out .= "\n\nSee channels marked 'Q'";
             $SortChoice='Query';
-            refresh();
+            refresh($scroll{first});
         }else{
             #leave page as it was!
-            refresh();
+            refresh($scroll{first});
         }   
         $exportcheck = scalar @Undo;     #export checking  
         SimpleBox($out);
@@ -2263,7 +2284,7 @@ sub CommitXMLTV{
             }
         }
         TidyData();
-        refresh();
+        refresh($scroll{first});
 
         #Write merge log out?
         return if $xmltvmatchcount==0;
