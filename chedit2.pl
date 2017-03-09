@@ -919,20 +919,16 @@ sub Diagnostics{
     my $filename= 'chedit'. TimeStamp() .'.diags'; 
  
     my $temp;
-    
-    for (sort keys %scroll){
-        if (ref($scroll{$_}) ne 'ARRAY'){printf "%-8s   %-8s\n", $_, $scroll{$_}};
-    }
-    exit 0;
-    
 
     unless (open DI, ">$filename") {SimpleBox("Cannot open $filename $!"); return};
+    
+    
     print DI "##log\n";
     print DI join("\n", @log), "\n";
     
-    print DI "Scroll settings\n";
+    print DI "\nScroll settings\n";
     for (sort keys %scroll){
-        if (ref($scroll{$_}) ne 'ARRAY'){printf "%-8s   %-8s\n", $_, $scroll{$_}};
+        if (ref($scroll{$_}) ne 'ARRAY'){printf DI "%-8s   %-8s\n", $_, $scroll{$_}};
     }
 
     #enough if spoof input
