@@ -45,6 +45,7 @@ mpx 7 freq 538000000
 ##channels1
 <ChannelInfo>
 <ChanId>1001</ChanId>
+<ServiceId>4164</ServiceId>
 <ChanNum>1</ChanNum>
 <CallSign>BBC ONE Lon</CallSign>
 <ChannelName>BBC ONE Lon</ChannelName>
@@ -58,6 +59,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1002</ChanId>
+<ServiceId>4287</ServiceId>
 <ChanNum>2</ChanNum>
 <CallSign>BBC TWO</CallSign>
 <ChannelName>BBC TWO</ChannelName>
@@ -71,6 +73,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1003</ChanId>
+<ServiceId>8261</ServiceId>
 <ChanNum>3</ChanNum>
 <CallSign>ITV</CallSign>
 <ChannelName>ITV</ChannelName>
@@ -84,6 +87,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1004</ChanId>
+<ServiceId>8384</ServiceId>
 <ChanNum>4</ChanNum>
 <CallSign>Channel 4</CallSign>
 <ChannelName>Channel 4</ChannelName>
@@ -97,6 +101,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1005</ChanId>
+<ServiceId>8500</ServiceId>
 <ChanNum>5</ChanNum>
 <CallSign>Channel 5</CallSign>
 <ChannelName>Channel 5</ChannelName>
@@ -110,6 +115,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1006</ChanId>
+<ServiceId>8325</ServiceId>
 <ChanNum>6</ChanNum>
 <CallSign>ITV2</CallSign>
 <ChannelName>ITV2</ChannelName>
@@ -123,6 +129,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1007</ChanId>
+<ServiceId>4288</ServiceId>
 <ChanNum>7</ChanNum>
 <CallSign>BBC THREE</CallSign>
 <ChannelName>BBC THREE</ChannelName>
@@ -136,6 +143,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1008</ChanId>
+<ServiceId>32842</ServiceId>
 <ChanNum>8</ChanNum>
 <CallSign>London Live</CallSign>
 <ChannelName>London Live</ChannelName>
@@ -149,6 +157,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1009</ChanId>
+<ServiceId>4544</ServiceId>
 <ChanNum>9</ChanNum>
 <CallSign>BBC FOUR</CallSign>
 <ChannelName>BBC FOUR</ChannelName>
@@ -162,6 +171,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1010</ChanId>
+<ServiceId>16048</ServiceId>
 <ChanNum>10</ChanNum>
 <CallSign>ITV3</CallSign>
 <ChannelName>ITV3</ChannelName>
@@ -175,6 +185,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1011</ChanId>
+<ServiceId>22208</ServiceId>
 <ChanNum>11</ChanNum>
 <CallSign>Pick</CallSign>
 <ChannelName>Pick something else</ChannelName>
@@ -188,6 +199,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1012</ChanId>
+<ServiceId>22272</ServiceId>
 <ChanNum>12</ChanNum>
 <CallSign>Dave</CallSign>
 <ChannelName>Dave</ChannelName>
@@ -201,6 +213,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1013</ChanId>
+<ServiceId>8452</ServiceId>
 <ChanNum>13</ChanNum>
 <CallSign>Channel 4+1</CallSign>
 <ChannelName>Channel 4+1</ChannelName>
@@ -214,6 +227,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1014</ChanId>
+<ServiceId>8442</ServiceId>
 <ChanNum>14</ChanNum>
 <CallSign>More 4</CallSign>
 <ChannelName>More 4</ChannelName>
@@ -227,6 +241,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1015</ChanId>
+<ServiceId>8385</ServiceId>
 <ChanNum>15</ChanNum>
 <CallSign>Film4</CallSign>
 <ChannelName>Film4</ChannelName>
@@ -240,6 +255,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1016</ChanId>
+<ServiceId>13120</ServiceId>
 <ChanNum>16</ChanNum>
 <CallSign>QVC</CallSign>
 <ChannelName>QVC</ChannelName>
@@ -253,6 +269,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1017</ChanId>
+<ServiceId>23712</ServiceId>
 <ChanNum>17</ChanNum>
 <CallSign>Really</CallSign>
 <ChannelName>Really</ChannelName>
@@ -266,6 +283,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1018</ChanId>
+<ServiceId>25664</ServiceId>
 <ChanNum>18</ChanNum>
 <CallSign>4Music</CallSign>
 <ChannelName>4Music</ChannelName>
@@ -279,6 +297,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1019</ChanId>
+<ServiceId>25792</ServiceId>
 <ChanNum>19</ChanNum>
 <CallSign>Yesterday</CallSign>
 <ChannelName>Yesterday</ChannelName>
@@ -292,6 +311,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1020</ChanId>
+<ServiceId>16208</ServiceId>
 <ChanNum>20</ChanNum>
 <CallSign>Drama</CallSign>
 <ChannelName>Drama</ChannelName>
@@ -305,6 +325,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1021</ChanId>
+<ServiceId>12992</ServiceId>
 <ChanNum>21</ChanNum>
 <CallSign>5 USA</CallSign>
 <ChannelName>5 USA</ChannelName>
@@ -318,6 +339,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1022</ChanId>
+<ServiceId>25920</ServiceId>
 <ChanNum>22</ChanNum>
 <CallSign>Ideal World</CallSign>
 <ChannelName>Ideal World</ChannelName>
@@ -331,6 +353,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1024</ChanId>
+<ServiceId>8330</ServiceId>
 <ChanNum>24</ChanNum>
 <CallSign>ITV4</CallSign>
 <ChannelName>ITV4</ChannelName>
@@ -344,6 +367,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1025</ChanId>
+<ServiceId>28096</ServiceId>
 <ChanNum>25</ChanNum>
 <CallSign>Dave ja vu</CallSign>
 <ChannelName>Dave ja vu</ChannelName>
@@ -357,6 +381,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1026</ChanId>
+<ServiceId>15856</ServiceId>
 <ChanNum>26</ChanNum>
 <CallSign>ITVBe</CallSign>
 <ChannelName>ITVBe</ChannelName>
@@ -370,6 +395,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1027</ChanId>
+<ServiceId>15952</ServiceId>
 <ChanNum>27</ChanNum>
 <CallSign>ITV2 +1</CallSign>
 <ChannelName>ITV2 +1</ChannelName>
@@ -383,6 +409,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1028</ChanId>
+<ServiceId>8448</ServiceId>
 <ChanNum>28</ChanNum>
 <CallSign>E4</CallSign>
 <ChannelName>E4</ChannelName>
@@ -396,6 +423,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1029</ChanId>
+<ServiceId>22336</ServiceId>
 <ChanNum>29</ChanNum>
 <CallSign>E4+1</CallSign>
 <ChannelName>E4+1</ChannelName>
@@ -409,6 +437,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1030</ChanId>
+<ServiceId>12928</ServiceId>
 <ChanNum>30</ChanNum>
 <CallSign>5*</CallSign>
 <ChannelName>5*</ChannelName>
@@ -422,6 +451,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1031</ChanId>
+<ServiceId>25856</ServiceId>
 <ChanNum>31</ChanNum>
 <CallSign>Spike</CallSign>
 <ChannelName>Spike</ChannelName>
@@ -435,6 +465,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1032</ChanId>
+<ServiceId>24032</ServiceId>
 <ChanNum>32</ChanNum>
 <CallSign>Movie Mix</CallSign>
 <ChannelName>Movie Mix</ChannelName>
@@ -448,6 +479,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1033</ChanId>
+<ServiceId>8361</ServiceId>
 <ChanNum>33</ChanNum>
 <CallSign>ITV +1</CallSign>
 <ChannelName>ITV +1</ChannelName>
@@ -461,6 +493,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1034</ChanId>
+<ServiceId>27232</ServiceId>
 <ChanNum>34</ChanNum>
 <CallSign>ITV3+1</CallSign>
 <ChannelName>ITV3+1</ChannelName>
@@ -474,6 +507,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1035</ChanId>
+<ServiceId>28288</ServiceId>
 <ChanNum>35</ChanNum>
 <CallSign>QVC Beauty</CallSign>
 <ChannelName>QVC Beauty</ChannelName>
@@ -487,6 +521,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1036</ChanId>
+<ServiceId>24384</ServiceId>
 <ChanNum>36</ChanNum>
 <CallSign>Create &amp; Craft</CallSign>
 <ChannelName>Create &amp; Craft</ChannelName>
@@ -500,6 +535,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1037</ChanId>
+<ServiceId>14498</ServiceId>
 <ChanNum>37</ChanNum>
 <CallSign>QUEST</CallSign>
 <ChannelName>QUEST</ChannelName>
@@ -513,6 +549,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1038</ChanId>
+<ServiceId>27648</ServiceId>
 <ChanNum>38</ChanNum>
 <CallSign>QUEST+1</CallSign>
 <ChannelName>QUEST+1</ChannelName>
@@ -526,6 +563,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1039</ChanId>
+<ServiceId>14532</ServiceId>
 <ChanNum>39</ChanNum>
 <CallSign>The Store</CallSign>
 <ChannelName>The Store</ChannelName>
@@ -539,6 +577,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1040</ChanId>
+<ServiceId>27840</ServiceId>
 <ChanNum>40</ChanNum>
 <CallSign>Rocks &amp; Co 1</CallSign>
 <ChannelName>Rocks &amp; Co 1</ChannelName>
@@ -552,6 +591,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1041</ChanId>
+<ServiceId>23040</ServiceId>
 <ChanNum>41</ChanNum>
 <CallSign>Food Network</CallSign>
 <ChannelName>Food Network</ChannelName>
@@ -565,6 +605,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1042</ChanId>
+<ServiceId>27680</ServiceId>
 <ChanNum>42</ChanNum>
 <CallSign>Travel Channel</CallSign>
 <ChannelName>Travel Channel</ChannelName>
@@ -578,6 +619,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1043</ChanId>
+<ServiceId>24448</ServiceId>
 <ChanNum>43</ChanNum>
 <CallSign>Gems TV</CallSign>
 <ChannelName>Gems TV</ChannelName>
@@ -591,6 +633,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1044</ChanId>
+<ServiceId>13024</ServiceId>
 <ChanNum>44</ChanNum>
 <CallSign>Channel 5+1</CallSign>
 <ChannelName>Channel 5+1</ChannelName>
@@ -604,6 +647,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1046</ChanId>
+<ServiceId>22226</ServiceId>
 <ChanNum>46</ChanNum>
 <CallSign>Challenge</CallSign>
 <ChannelName>Challenge</ChannelName>
@@ -617,6 +661,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1047</ChanId>
+<ServiceId>27168</ServiceId>
 <ChanNum>47</ChanNum>
 <CallSign>4seven</CallSign>
 <ChannelName>4seven</ChannelName>
@@ -630,6 +675,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1048</ChanId>
+<ServiceId>24016</ServiceId>
 <ChanNum>48</ChanNum>
 <CallSign>movies4men</CallSign>
 <ChannelName>movies4men</ChannelName>
@@ -643,6 +689,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1049</ChanId>
+<ServiceId>14372</ServiceId>
 <ChanNum>49</ChanNum>
 <CallSign>TJC</CallSign>
 <ChannelName>TJC</ChannelName>
@@ -656,6 +703,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1055</ChanId>
+<ServiceId>16080</ServiceId>
 <ChanNum>55</ChanNum>
 <CallSign>Channel 5+24</CallSign>
 <ChannelName>Channel 5+24</ChannelName>
@@ -669,6 +717,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1133</ChanId>
+<ServiceId>27712</ServiceId>
 <ChanNum>133</ChanNum>
 <CallSign>Al Jazeera Eng</CallSign>
 <ChannelName>Al Jazeera Eng</ChannelName>
@@ -682,6 +731,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1135</ChanId>
+<ServiceId>27456</ServiceId>
 <ChanNum>135</ChanNum>
 <CallSign>RT</CallSign>
 <ChannelName>RT</ChannelName>
@@ -695,6 +745,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1170</ChanId>
+<ServiceId>15200</ServiceId>
 <ChanNum>170</ChanNum>
 <CallSign>ADULT Section</CallSign>
 <ChannelName>ADULT Section</ChannelName>
@@ -708,6 +759,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1171</ChanId>
+<ServiceId>15232</ServiceId>
 <ChanNum>171</ChanNum>
 <CallSign>Television X</CallSign>
 <ChannelName>Television X</ChannelName>
@@ -721,6 +773,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1172</ChanId>
+<ServiceId>27520</ServiceId>
 <ChanNum>172</ChanNum>
 <CallSign>ADULT smileTV2</CallSign>
 <ChannelName>ADULT smileTV2</ChannelName>
@@ -734,6 +787,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1173</ChanId>
+<ServiceId>22400</ServiceId>
 <ChanNum>173</ChanNum>
 <CallSign>ADULT smileTV3</CallSign>
 <ChannelName>ADULT smileTV3</ChannelName>
@@ -747,6 +801,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1174</ChanId>
+<ServiceId>27904</ServiceId>
 <ChanNum>174</ChanNum>
 <CallSign>ADULT Babestn</CallSign>
 <ChannelName>ADULT Babestn</ChannelName>
@@ -760,6 +815,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1175</ChanId>
+<ServiceId>24256</ServiceId>
 <ChanNum>175</ChanNum>
 <CallSign>ADULT PARTY</CallSign>
 <ChannelName>ADULT PARTY</ChannelName>
@@ -773,6 +829,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1731</ChanId>
+<ServiceId>22848</ServiceId>
 <ChanNum>731</ChanNum>
 <CallSign>Classic FM</CallSign>
 <ChannelName>Classic FM</ChannelName>
@@ -786,6 +843,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1732</ChanId>
+<ServiceId>22880</ServiceId>
 <ChanNum>732</ChanNum>
 <CallSign>LBC</CallSign>
 <ChannelName>LBC</ChannelName>
@@ -799,6 +857,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1792</ChanId>
+<ServiceId>8330</ServiceId>
 <ChanNum>792</ChanNum>
 <CallSign>ITV4</CallSign>
 <ChannelName>ITV4</ChannelName>
@@ -812,6 +871,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1800</ChanId>
+<ServiceId>32900</ServiceId>
 <ChanNum>8</ChanNum>
 <CallSign>London Live</CallSign>
 <ChannelName>London Live</ChannelName>
@@ -825,6 +885,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1801</ChanId>
+<ServiceId>32901</ServiceId>
 <ChanNum>1</ChanNum>
 <CallSign>BBC ONE Lon</CallSign>
 <ChannelName>BBC ONE Lon</ChannelName>
@@ -838,6 +899,7 @@ mpx 7 freq 538000000
 </ChannelInfo>
 <ChannelInfo>
 <ChanId>1802</ChanId>
+<ServiceId>32902</ServiceId>
 <ChanNum>2</ChanNum>
 <CallSign>BBC TWO</CallSign>
 <ChannelName>BBC TWO</ChannelName>
