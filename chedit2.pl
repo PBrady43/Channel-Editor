@@ -5,9 +5,10 @@
 
 =pod
 This is a channel editor for MythTV.  It uses the MythTv API interface.
+For command line options use --help
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 9 March 2017.
+Phil Brady, 6 Dec 2017.
 =cut
 
 
@@ -22,7 +23,8 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version=" 2.10 (tki03) 9 March 2017";
+my $version='2.20 (tkl06)   3 Feb 2018';
+my $regressiontest=0;      #developer switch (old export format)
 
 
 # 27 May 2016    Version 2.00 released.
@@ -97,6 +99,69 @@ my $version=" 2.10 (tki03) 9 March 2017";
 #  Correctly measure linespace and hence no of lines fittinmg in the label
 #  Allow font changing +, - and b
 
+#29 Nov 2017
+#add ServiceId to collected data
+#Read from backend, sort, view, custom sorts & views, export.
+#  Include import rule 0 (serviceid only).
+
+#4 Dec 2017
+#  Fingerprint changed:
+#    rule 1:  same sid, chno!=sid
+#    rule 2:  same sid' chno=sid
+#    rule 3:  same callsign
+#    rule 4:  chan no + callsign
+#    rule 5:  source, freq, callsign
+
+#5 Dec 2017
+# rule 0 added:   same sid
+# oldcallsign stuff removed
+#Version tkl02 5 Dec 2017
+
+# 6 dec 2017
+#  sub fingerprint:  
+#     rule 1 breaks with US channel nos eg 1_3.  Use ne not != in test
+#     rule 0 changed to frequencyid:serviceid - does not impact UK channels but does US.
+#  default view  is serviceid
+#  bugfix:  sort by Query if queries in import.
+#  new rule 0 inserted - chanid to be used with csv file import.
+#  Export & import in csv format; 
+#  drop import file check at startup
+#13 Dec 2017
+#Added 'NoEdit' comment line to CSV file.     Version 2.12
+# Cosmetic changes - shorter ServiceId heading.  
+
+#19Dec2017
+#bugfix:  delete channel, update database then view normal gave crash.  @sorted recreated in sub Save.
+#
+#fingerprints now:
+#0: channelid
+#1: serviceid
+#2 Freq: serviceid
+#3:serviceid; !=channo
+#4 serviceid; ==channo
+#5 Callsign
+#6 Callsign:channo
+#7: source, freqid, callsign
+#
+#compute width of ServiceId in TidyData
+
+#21Dec2017
+#Add rule description to log after import
+#Use Q column for rule number in import
+#Revise sub sortx to handle this
+#Allow undo of rule number after import
+
+#31Dec2017
+#repair broken undo!
+#Can no longer use @undo length to remind of save on exit.  Use $ChangesMade instead. 
+
+#2Jan2017
+#Added font changes to view menu
+
+#3Feb2018.  decrement $ChangesMade on undo
+#released version 2.20 
+
+
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
 
@@ -115,6 +180,7 @@ my $mythversion='0';
 my @sorted;
 my @log; my @Undo=(); my @UndoPointer =(0); my @track;
 my $exportcheck=0;    #check for export reminder
+my $ChangesMade=0;
 
 GetOptions("backend:s"      => \$backend,
            "spoof:s"        => \$spoof,
@@ -176,11 +242,12 @@ my $ViewChoice='Normal';
 my $LastChannelView='Normal';
 my $ChNoLeft=0; my $ChNoRight=0;     #space allocated for ATSC major/minor  (or non atsc/nothing)
 
-my %columns = (    #column heading, format for view, flags (R=read backend,W=check width, E=edit, X=export, I=import without asking, i=do not import, C=custom column, B=Bulk edit item )
+my %columns = (    #column heading, format for view, flags (R=read backend,W=check width, E=edit, X=export, 
+                   #   I=import & change without asking, i=do not change on import, C=custom column, B=Bulk edit item )
     ChanNum    =>  ['  ChNum','%7s','RXIECB'],
     SourceId   =>  [' Src:',' %3d:','RXi'],
     MplexId    =>  ['Mpx','%-3d','RXi'],
-    Flags      =>  ['  DVECdQUM','  %-8s','C'],
+    Flags      =>  ['  DVECdIUM','  %-8s','C'],
     XMLTVID    =>  ["  XMLTVID", "  %-38s",'RWXIECB'],
     CallSign   =>  ["  CallSign", "  %-28s",'RWXIEC'],
     ChanId     =>  ["  ChId","%6d",'Ci'],
@@ -188,19 +255,21 @@ my %columns = (    #column heading, format for view, flags (R=read backend,W=che
     Visible    =>  ['','','RXIE'],
     UseEIT     =>  ['','','RXIE'],
     CommFree   =>  ['','','RXi'],
-    OldCallSign=>  ['  OldCallSign', '%-28s', ''],   #set to RWXIC if callsign changed
+    #OldCallSign=>  ['  OldCallSign', '%-28s', ''],   #set to RWXIC if callsign changed
    'Src:Mpx'   =>  ['','','C'],
-    NewState   =>  ['','',''],           # ) legacy export file parameters
+    #NewState   =>  ['','',''],           # ) legacy export file parameters
     Source     =>  ['','',''],           # )
     FrequencyId=>  ['FqId', '', 'RWXiC'],
-    ChannelName=>  ['  ChannelName', '', 'RWExIC'],
+    ChannelName=>  ['  ChannelName', '', 'RWEXIC'],
     Frequency  =>  ['','','i'],
+    ServiceId  =>  ['SvcId', ' %5d', 'RWXiC'],
 );
 
-my @columnswanted = qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
-my @customcolumns = ();
+
+my @columnswanted = qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign ServiceId/;
+my @customcolumns = qw/ChanNum ChanId CallSign ChannelName ServiceId SourceId MplexId FrequencyId Flags XMLTVID/;
  
-my %sortitems =(
+my %sortitems =(        #[1=sortable:2=custom sort, sort text, 1=numsort:2=charsort] 
    ChanId           => [3,'id', 0],
   'Channel No'      => [3,'Sort', 1],
   'Sort'            => [0, '', 1],
@@ -212,13 +281,14 @@ my %sortitems =(
    ChannelName      => [3, 'ChannelName', 2],
    FrequencyId      => [3, 'FrequencyId', 1],
    XMLTVID          => [3, 'XMLTVID', 2],
+   ServiceId        => [3, 'ServiceId',1],
   'Visible/deleted' => [3,'Visible', 99],
    UseEIT           => [3, '-E', 3],
    Commfree         => [3, '-C',3],
   'Duplicate Callsign' => [1,'-d:CallSign',99],
   'Duplicate ChanNum'  => [1,'-d:Sort',99],
    Duplicate        => [2, '-d',3],
-   Query            => [3, '-Q',3],
+   'Import rule'    => [3, '-I',3],
    UnDoable         => [3, '-U',3],
    Modified         => [3,'-M',3],
    custom           => [0, 'id',99],
@@ -255,8 +325,8 @@ eval{
 
     track('creating file menu');
     my $FileMenu= $menubar-> Menubutton(-text =>"File", -menuitems  => [
-          [ Button => "Import",               -command   => \&Import],
-          [ Button => "Export",               -command   => \&Export],
+          [ Button => "ImportCSV",               -command   => \&Import],
+          [ Button => "ExportCSV",               -command   => \&Export],
           [ Button => "Update Database!!",    -command   => \&Save],
           [ Button => "Exit",                 -command   => \&exitscript],
           ]) ->pack(-side => "left");
@@ -268,7 +338,8 @@ eval{
                             -command=> \&ChooseDisplay);
     $ViewMenu -> radiobutton(-label => "Show Channelname",    -variable=>\$ViewChoice, -value=>'ChannelName',
                             -command=> \&ChooseDisplay);
-
+    $ViewMenu -> radiobutton(-label => "Show XMLTVID",      -variable=>\$ViewChoice, -value=>'XMLTVID',
+                            -command=> \&ChooseDisplay);
     if (( $Extra) && (!exists $columns{$Extra})){
       $ViewMenu -> radiobutton(-label => "Show $Extra", -variable=>\$ViewChoice, 
                         -value=>'Extra', -command=> \&ChooseDisplay);
@@ -282,7 +353,12 @@ eval{
                                                   -command      => \&ShowLog);
     $ViewMenu ->  separator();
     $ViewMenu ->  radiobutton(-label=>"Define Custom columns", -variable=>\$ViewChoice, -command=> sub{&CreateColumns});
-
+	$ViewMenu ->  separator();
+	$ViewMenu ->  command(-label=>"Increase font (+)", -command   =>  sub{event('plus')});
+	$ViewMenu ->  command(-label=>"Reduce font (-)", -command   =>  sub{event('minus')});
+	$ViewMenu ->  command(-label=>"Toggle bold (b)", -command   =>  sub{event('b')});
+	
+	
     track('creating sort menu');
     my $SortMenu= $menubar-> Menubutton(-text =>"Sort") -> pack(-side => "left");
     for (sort keys %sortitems){
@@ -291,7 +367,6 @@ eval{
                             -command => \&NewSort);
        }
     }
-   
     $SortMenu ->  radiobutton(-label =>"Custom sort", -variable =>\$SortChoice, -value=>'custom', -command =>\&NewSort);
     $SortMenu ->  separator();
     $SortMenu ->  radiobutton(-label =>"Filter by search text", -variable =>\$SortChoice, -value=>'filter', -command =>\&Filter);
@@ -305,6 +380,8 @@ eval{
           [ Button => "Bulk by row range",    -command   => \&EditbyRow],
           [ Button => "Bulk by Source:mpx",   -command   => \&EditbyMpx],
           [ Button => "Bulk by CallSign",     -command   => \&EditbyName],
+          #[ Button => "Delete Duplicate ServiceIds",-command   => \&DeleteDuplicateSid],
+          #[ Button => 'Dev option', -command => \&DevOption],
           [ Separator =>''],
           [ Button => "Undo",         -command   => sub{&EditUndo(0)}],
           [ Button => "Undo all",     -command   => sub{&EditUndo(1)}],
@@ -357,13 +434,82 @@ eval{
     $text .="\n\n Now click either to continue";
     CheckOk("Note: $text");
 
-    Import() if (-e 'channels.export') and (CheckOk('Found an export file.  Do you wish to import now?') eq 'ok');
-
     MainLoop;
 };
 postmortem($@) if ($@);
 exit 0;
 
+sub DevOption{
+	#developer code - ignore
+	#add ServiceId to tutorial.diags
+	my $dummy=32900; my $sid;
+	open IN,"<tutorial.diags";
+	open OUT,"> tutorial2.diags";
+	while ($_=<IN>){
+		print OUT $_;
+		if (/ChanId/){
+			/\<ChanId\>(\d*)\</;
+			if ($1==1792){
+					$sid=8330;      #ITV4
+			}elsif (defined $ChanData{$1}){
+					$sid=$ChanData{$1}{ServiceId};
+			}else{     #creat an artificial one
+				$sid=$dummy++;
+			}
+			print OUT "<ServiceId>$sid</ServiceId>\n";
+		}
+	}
+	
+	close IN;
+	close OUT;
+	exit 0;
+}
+
+
+sub DeleteDuplicateSid{
+
+	#
+	# Delete channels with high channel numbers equal to service id which also have a duplicate 
+	# channel with same serviceid but lower channel number
+		
+	eval{
+		my %dups;   #  +1 if (chanid != serviceid), +1000 if ==
+		my $sid;
+		
+		mylog(0,'DeleteDuplicateSid');
+		
+		#prepare undo
+		ClearUflags();  push @UndoPointer, scalar @Undo; 
+		
+		#scan channels; index by serviceid
+		for (keys %ChanData){
+			$sid=$ChanData{$_}{ServiceId};
+			if ($sid eq $ChanData{$_}{ChanNum}){
+				$dups{$sid}+=999
+			}
+			$dups{$sid}++;
+		}
+		
+		my $count=0;
+		#now scan again 
+		for (keys %ChanData){
+			$sid=$ChanData{$_}{ServiceId};
+			my $val=$dups{$sid};
+			if ($val==1001){			# duplicated channels - one of each
+				if ($sid eq $ChanData{$_}{ChanNum}){
+					SetNewValue($_, 'Visible', 'delete');
+					$count++;
+				}
+			}			
+		}
+		TidyData();
+		#Show data
+		#refresh($scroll{first});
+		refresh();
+		SimpleBox("$count channels marked for deletion");
+	};
+    postmortem($@) if ($@);
+}
 
 sub ReSize{
     eval{
@@ -385,6 +531,7 @@ sub event{
     eval{
         # expect Home, End, Prior, Next, Up, Down, Resize. See %scroll. 
         my $event=$_[0];
+        mylog(0,"event: $event");
         if ($event =~ /^Shift_/){$scroll{Shifting}= 'Shift'; return};
         my $more=0;
         if ($event eq 'plus'){$scroll{size}+=2; $more=1};   #bigger font
@@ -576,17 +723,13 @@ sub SetNewValue{
     #set a value, maintaining undo stack and flags,
     eval{
         my ($id, $param, $value)=@_;
-
         if ($value ne $ChanData{$id}{$param}){
-            if (($param eq 'CallSign') && ($ChanData{$id}{'OldCallSign'}eq '')){
-                SetNewValue($id, 'OldCallSign', $ChanData{$id}{CallSign});
-                $columns{OldCallSign}[2]='RWXIC';
-            }
             push @Undo, "$id:$ChanData{$id}{Flags}:$param:$ChanData{$id}{$param}";  #maintain undo stack
             $ChanData{$id}{$param}=$value;
-            substr($ChanData{$id}{Flags},6,2)='UM';  # set U & M
+            substr($ChanData{$id}{Flags},5,3)='.UM';  # set U & M, clear I
+            $ChangesMade++;
         }
-        substr($ChanData{$id}{Flags},5,1)='.';  # reset Q
+        
     };
    postmortem($@) if ($@);
 }
@@ -790,7 +933,7 @@ sub EditUndo{
         while (scalar @Undo > $limit){
             ($id, $state, $param, $value)=split /:/, pop @Undo, 4;
             $ChanData{$id}{Flags} = $state;
-            $ChanData{$id}{$param} = $value;
+            if ($param ne ''){$ChanData{$id}{$param} = $value; $ChangesMade--};
         } 
         if (scalar @Undo ==0){
             @UndoPointer=(0);
@@ -798,7 +941,8 @@ sub EditUndo{
             #Mark 'U' for previous batch
             my $id;
             for ($UndoPointer[-1] .. ((scalar @Undo) -1)){
-                 ($id)=split /:/, $Undo[$_];
+                 ($id,$state,$param)=split /:/, $Undo[$_];
+                 next if ($param eq '');   #exclude I only changes 
                  substr($ChanData{$id}{Flags},6,1)='U';  
             }
         }
@@ -972,8 +1116,6 @@ sub track{
 
     #put entry in track log
 
-
-
     (my $param)=@_;
     $param ||='';
     $param =~ s/\n/ /;
@@ -1121,7 +1263,7 @@ sub CheckOk{
 
 sub TidyData{
 
-    #note longest CallSign, XMLTVID and extra - allocate column widths.
+    #note longest CallSign, XMLTVID etc - allocate column widths.
     
     eval{
         track();
@@ -1137,13 +1279,13 @@ sub TidyData{
             for (keys %ChanData){
                 $temp=$ChanData{$_}{$field};
                 $max=length($temp) if $max<length($temp);
-                $align=-1 unless $temp =~ m!^\s*\d+\s*$!;
+				$align=-1 unless $temp =~ m!^\s*\d+\s*$!;
             }
- 
+            
             if ($align >0){
                 #right justify numeric
-                $columns{$field}[0]= ' ' x ($max-length $heading) . "$heading";
-                $columns{$field}[1] = '%'. $max . 's';
+                $columns{$field}[0]= ' ' x (1+$max-length $heading) . "$heading";
+                $columns{$field}[1] = ' %'. $max . 's';
 
             }else{
                 #left justify string
@@ -1192,6 +1334,7 @@ sub TidyData{
                if ($dupnumber{$ChanData{$_}{ChanNum}} >1)       {$new='d'};
            } 
            substr($ChanData{$_}{Flags},4,1)=$new;
+           
          }
     };
     postmortem($@) if ($@);
@@ -1205,7 +1348,8 @@ sub SortOutChannelNos{
 
     #phase 0 - set sort value and note widths
     #phase 1 - return aligned chan  no for printing
-
+	track("SortOutChannelNos id=$id phas$phase");
+	
     my $chan=$ChanData{$id}{ChanNum};
 
     #simple numeric
@@ -1256,115 +1400,132 @@ sub state{
 sub Import{
     eval{
         track('importing');
-        mylog(0,"Importing channels.export");
+        my $csv=0;
+        my $filename='channels.export';
+        if ((-e 'channels.csv') && ($regressiontest==0)){ 
+			$filename  ='channels.csv';
+			$csv=1;
+		}
+        mylog(0,"Importing $filename");
 
         #
         # scan import file
         #
 
-        my $rule; my $index; my %Chans; my $temp;
-        unless (open  FH, "<channels.export") {SimpleBox("Cannot open channels.export"); return};
+        my $rule; my $index; my %Chans; my $temp; my @ruleset=(5,6,7);
+        unless (open  FH, "<$filename") {SimpleBox("Cannot open $filename"); return};
 
-        #read heading
+        #read heading from import file
         chomp ($_=<FH>);
-        s/\]Source\[/\]SourceId\[/;      #align legacy header
-        my @headings = split /\[\]:\[\]/, $_;
-        my $freqtype=(/FrequencyId/)?'FrequencyId':'Frequency';
-
-        #read values from import file
+        
+        my $freqtype= 'FrequencyId';    #a version 1 remnant
+        mylog(0,"freqtype=$freqtype");
+        my @headings = csvparse($csv, $_);
+        
+        #check headings as expected
+        {
+			my %check=(ChanId => 1);
+			my @out=();
+			for (columnlist('X')){$check{$_}++};
+			for (@headings){$check{$_} +=1000};
+			for (sort keys %check){if ($check{$_} != 1001){push @out,$_}};
+			if (scalar @out){SimpleBox("Missing, spurious or duplicated headings:\n" . join "\n",@out); return};
+        }
+                
+        @ruleset=(1..7);       # Rules applied during matching.  safe to change.
+        if ($csv){
+			my $out="Importing from channels.csv.\n\nUse ChanId only for matching?\n\n";
+			$out .= "This will give 100% matching but will not be appropriate if:    \n";
+			$out.= "   you have changed ChanId in the csv file\n -- OR --\n";
+			$out .= "   You have rescanned tuners since export.\n";
+			$out .= "Cancel in these circumstances\n";
+			if (CheckOk($out) eq 'ok'){@ruleset=(0)};
+		}
+		
+        #read values from import file - record fingerprints
+        
         my %item; my $k, my $v; my $linecount=0;my @values;my $ChanId;
         while ($_= <FH>){
             chomp;
-
+            $linecount++;
+			next if (/^#/);    #skip comment lines
             #get values from line
-            @values=split /\[\]:\[\]/, $_;
-            push @values, '' if @headings>@values;   #null entry at end
-
-            $item{OldCallSign}=''; #default
+            @values=csvparse($csv,$_);
+            push @values, '' if @headings>@values;   #null entry at end - eg blank XMLTVID
             for $k (@headings){
                 $item{$k}=shift @values;
             }
-            $item{OldCallSign}='' if ($item{OldCallSign} eq $item{CallSign});
-
-            #tidy up version 1 data
-            if (defined $item{NewState}){
-                $v=index('VHD',$item{NewState});
-                if ($v<0){SimpleBox('Invalid file - newstate field suspect'); return};
-                $item{Visible}= qw/true false delete/[$v];
-            }
             
-            #now generate match entries for callsign and oldcallsign
-            my $name;
-            for $name (qw/CallSign OldCallSign/){
-                next if $item{$name} eq '';
-                for $rule (1..3){  
-                    $index=fingerprint($rule, $item{ChanNum}, $item{SourceId}, $item{$freqtype}, $item{$name});
-                    $Chans{$index}{count}++;
-                    $Chans{$index}{FileLine}=$linecount;
-                }
+            for $rule (@ruleset){  
+				$index=fingerprint($rule, $item{ChanId}, $item{ChanNum}, $item{SourceId}, $item{$freqtype}, $item{CallSign},$item{ServiceId});
+				next unless (defined $index);
+				$Chans{$index}{count}++;
+				$Chans{$index}{FileLine}=$linecount;
             }
-            $linecount++;
         }
         close FH;
 
         #
-        #now scan database and generate match hash entries
+        #now scan database and record fingerprints
         #
-        track();
+        
+        mylog(0,'Scanning database');
+        
         for (sort keys %ChanData){
-           my $freq=$ChanData{$_}{FrequencyId};  #version 2
-           if ($freqtype eq 'Frequency'){        #version 1
+            my $freq=$ChanData{$_}{FrequencyId};  #version 2
+            if ($freqtype eq 'Frequency'){        #version 1
                  $freq=$MplexInfo{$ChanData{$_}{SourceId} .':'. $ChanData{$_}{MplexId}}{Frequency};
-           }
-           for $rule (1..3){
-                $index=fingerprint($rule, $ChanData{$_}{ChanNum}, $ChanData{$_}{SourceId}, $freq, $ChanData{$_}{CallSign});
+            }
+           	
+            for $rule (@ruleset){
+                $index=fingerprint($rule, $_, $ChanData{$_}{ChanNum}, $ChanData{$_}{SourceId}, $freq, $ChanData{$_}{CallSign},$ChanData{$_}{'ServiceId'});
+                next unless (defined $index);
                 $Chans{$index}{count} +=1000;
                 $Chans{$index}{ChanId}=$_;
-           }
+            }
         }
 
         #now try to match them  - enter matches in $line2chanid{file line no}=> channelid
         
-        my @rulestats = (0,0,0,0,0);
-        my %line2chanid=();
-
+        my @rulestats = (0,0,0,0,0,0,0,0,0);
+        my %line2chanid=();      #links line in file to chanid
+		my %line2chanidrule=();  #links line in file to rule used
         for (sort keys %Chans){
             my $ok=0;
             $temp=$Chans{$_}{count};
             next if ($temp % 1001) !=0; 
             $ok=1 if $temp == 1001;
             next if $ok==0;
- 
             $temp=$Chans{$_}{FileLine};
             next if exists ($line2chanid{$temp});  #got this one already
             $line2chanid{$temp}=$Chans{$_}{ChanId};
             /^(\d)/;
             $rulestats[$1]++;
+            $line2chanidrule{$temp}=$1;
         }
 
         #
         #now we have identified the matches, we can re-scan the file and change values in database.
         #
 
-        unless (open  FH, "<channels.export") {SimpleBox("Cannot open channel.export"); return};
+        unless (open  FH, "$filename") {SimpleBox("Cannot open $filename"); return};
 
         #Initialise undo first
-        ClearUflags();
+        #ClearUflags();
         push @UndoPointer, scalar @Undo;  #remember where we started this undo batch
-        $linecount=-1;
-
+        $linecount=0;
+        		
         #make a list of fields which can be changed
         my @changeitems=();
-
-        for (reverse sort @headings){          #reverse places OldCallSign before CallSign
+        for (sort @headings){
              if ($columns{$_}[2] =~ 'XI'){ 
                  push @changeitems, $_;
              }elsif ($columns{$_}[2] =~ 'Xi'){
                 #omit
-             }elsif ($columns{$_}[2] =~ 'X'){
-                 if (CheckOk("\nExport file includes $_  \n\n  Do you wish to modify this field?  \n\n  Use this with caution!! \n\n  Choose cancel to leave it unchanged.") eq 'ok'){  
-                    push @changeitems, $_;
-                 }
+             #}elsif ($columns{$_}[2] =~ 'X'){
+             #    if (CheckOk("\nExport file includes $_  \n\n  Do you wish to modify this field?  \n\n  Use this with caution!! \n\n  Choose cancel to leave it unchanged.") eq 'ok'){  
+             #       push @changeitems, $_;
+             #    }
              }
         }
   
@@ -1376,20 +1537,14 @@ sub Import{
         while ($_=<FH>){
             chomp;
             $linecount++;
-
+			next if (/^#/);    #skip comment lines
             if (exists $line2chanid{$linecount}){
-                @values=split /\[\]:\[\]/, $_;
+                @values=csvparse($csv,$_);
                 push @values, '' if @headings>@values;  #fix if last one blank
                 for $k (@headings){
                     $item{$k}=shift @values;
                 }
-                #tidy up the data  (again - sigh!)
-                if (defined $item{NewState}){
-                    $v=index('VHD',$item{NewState});
-                    if ($v<0){SimpleBox('Invalid file - newstate field suspect'); return};
-                    $item{Visible}= qw/true false delete/[$v]
-                }
-
+ 
                 #regularise 0.27/0.28 Commfree values 
                 if (defined $item{CommFree}){
                     if (($item{CommFree} eq '0') or ($item{CommFree} eq 'false')){
@@ -1400,72 +1555,134 @@ sub Import{
                 }   
                 
                 $ChanId=$line2chanid{$linecount};
+                my $rule=$line2chanidrule{$linecount};
+                my $UndoPointer=scalar @Undo;
                 for $k (@changeitems){
-                     if (exists $item{$k}){
+                    if (exists $item{$k}){
                          track("k=$k");
                          SetNewValue($ChanId, $k, $item{$k});
                     }
 
-                 }
+                }
+                if ($UndoPointer==scalar @Undo){   #no changes made
+					push @Undo, "$ChanId:$ChanData{$ChanId}{Flags}::";  #maintain flags in undo stack
+				}
+				substr($ChanData{$ChanId}{Flags},5,1)=$rule;    #I flag
             }
         }
 
-        #now sort out Q flag - mark all initially as queried
-
+        #now set I flag for those not already set
+        
         my $queries=0; my $match=0;
+        %line2chanid=reverse(%line2chanid);    #now indexed by ChanId
         for (keys %ChanData){
-             substr($ChanData{$_}{Flags},5,1)='Q'; 
-             $queries++;
+			next if (defined $line2chanid{$_});
+			next if (state($_,'Q'));
+			push @Undo, "$_:$ChanData{$_}{Flags}::";  #maintain undo stack
+            substr($ChanData{$_}{Flags},5,1)='Q'; 
+            $queries++;
         }
-        #now clear Q for those matched
-        for (keys %line2chanid){
-            $ChanId=$line2chanid{$_};
-            substr($ChanData{$ChanId}{Flags},5,1)='.';
-            $queries--;
-        }  
- 
+         
         #log the rule stats
-        mylog(0,'    Rule stats');
-        for (1 .. 3){
-            mylog(0,"       Rule $_  $rulestats[$_]");
+        mylog(0,'Import rule stats');
+        my @text=('Chanid', 'ServiceId','FreqId:ServiceId', 'ServiceId (!=ChanNo)', 'ServiceId (=ChanNo)', 
+                      'Callsign', 'ChanNo:CallSign', 'Src:Freq:CallSign');
+        
+        for (sort @ruleset){
+			mylog(0,"       Rule $_  $rulestats[$_]     $text[$_]");
             $match+=$rulestats[$_];
         }
         mylog(0, "    Matches  $match  Queries $queries");
 
         TidyData();
 
-        my $out='Import complete';
-        $out .= "\n\n$match channels matched, $queries not.";
+        my $out="Import complete from $filename";
+        $out .= "\n$match channels matched, $queries not.";
         if  ($queries){
-            $out .= "\n\nSee channels marked 'Q'";
-            $SortChoice='Query';
-            refresh($scroll{first});
-        }else{
-            #leave page as it was!
-            refresh($scroll{first});
-        }   
-        $exportcheck = scalar @Undo;     #export checking  
+            $out .= "\nSee channels marked 'Q'";
+            if ($ruleset[0]==0){ $out.="\n\n100% matching expected.  Do you have an invalid csv file ??"};
+            
+        }
+        $SortChoice='Import rule';
+        NewSort();
+        $exportcheck = scalar @Undo;     #export checking   
         SimpleBox($out);
     };
     postmortem($@) if ($@);
 }
 
 sub fingerprint{
+	my ($rule, $chid, $chno, $src, $freq, $name, $ServiceId)=@_;
 
-    my ($rule, $chno, $src, $freq, $name)=@_;
-   
-    if ($rule ==1){
-        return "1:$name";
-    }elsif ($rule==2){
-        $chno =~ s/\s//g;
-        return "2:$chno:$name";
-    }elsif ($rule==3){
-        return "3:$src:$freq:$name";
-    }elsif ($rule ==4){
-        return "4:$name";
-    }else{
-        postmortem ("Import rule $rule missing");
-    }
+	if ($rule ==0){
+		return "0:$chid";				#csv rule
+	
+	}elsif ($rule ==1){					#UK
+		return "1:$ServiceId";
+	
+	}elsif ($rule ==2){					#USA rule
+		return "2:$freq:$ServiceId";	
+		
+	}elsif ($rule ==3){	   #UK
+		if ($chno ne $ServiceId){return "3:$ServiceId"};
+		return undef;
+	}elsif ($rule==4){					#UK
+		if ($chno eq $ServiceId){return "4:$ServiceId"};
+		return undef;
+	}elsif ($rule==5){					#general
+		return "5:$name";
+	}elsif ($rule==6){					#general
+		$chno =~ s/\s//g;
+		return "6:$chno:$name";
+	}elsif ($rule==7){					#general
+		return "7:$src:$freq:$name";
+	}else{
+		postmortem ("Import rule $rule missing");
+	}
+}
+
+sub csvline{
+	(my @bits)=@_;
+	
+	if ($regressiontest){
+		
+		#old format
+		return join('[]:[]',@bits) . "\n";
+	}
+	
+	for my $m (0..scalar @bits-1){
+		#$bits[$m] =~ s/\"/\"\"/g;
+		if ($bits[$m] =~ /\,/){$bits[$m]='"' . $bits[$m] . '"'};
+	}	
+		
+	return join (',',@bits) ."\n";
+}
+ 
+sub csvparse{
+	(my $csv,my $in)=@_;
+	if ($csv==0){return split /\[\]:\[\]/, $in};   #old format
+	
+	#$in =~ s/\"\"/\"/g;
+	my @bits=split(',',$in);
+	
+	my $b='';
+	my @out;
+	my $lim=scalar(@bits)-1;
+	
+	for my $m (0.. $lim){
+		$b .= $bits[$m];
+		if (($b =~ /^"/) && ($b !~ /"$/)){
+			$b .=',' if ($m<$lim);
+		}elsif ($b =~ /^"(.*,.*)"$/){
+			push @out,$1;
+			$b='';
+		}else{
+			push @out,$b;
+			$b='';
+		}
+	}
+	if ($b ne ''){push @out, $b};
+	return @out;
 }
 
 
@@ -1474,42 +1691,54 @@ sub Export{
     eval{
         #export state of play
         track();
-        mylog(0,"\nExporting to channel.export"); 
-        unless (open  FH, ">channels.export"){
-            SimpleBox("Cannot open channels.export"); return};
-        my @fields= columnlist('X');
-
-        print FH join '[]:[]', @fields;
-        print FH "\n";
+        my $fname='channels.csv';
+        if ($regressiontest){$fname='channels.export'};
+        mylog(0,"\nExporting to $fname"); 
+        unless (open  FH, ">$fname"){SimpleBox("Cannot open $fname"); return};
+        
+        #headings
+        my @fields= columnlist('X'); 
+        print FH csvline('ChanId',@fields);   #headings
+        
+        #comment line
+        my @out=('#NoEdit');
+        for (@fields){
+			my $x=$columns{$_}[2];
+			if    (index($x,'I')>-1){push @out,'#'}
+			elsif (index($x,'i')>-1){push @out,'#NoEdit'}
+			else {push @out,'#Unwise'};
+		}
+		print FH csvline(@out);   #comment line
+        
+        #channel data
         my $count=0; my $csign; my $field;my $fq;
-        for (sort keys %ChanData){
-            my @out; my $val;
-
-            #clear oldcallsign if user has reinstated callsign 
-            $ChanData{$_}{OldCallSign}='' if ($ChanData{$_}{OldCallSign} eq $ChanData{$_}{CallSign});
-
+        for (sort {$a<=>$b} keys %ChanData){
+            my $val;
+			@out=($_);
             for $field (@fields){
                 $val=$ChanData{$_}{$field};
                 $val =~s/\s/ /g;    #kill newlines, linefeeds etc 
                 push @out, $val;
             }   
-            print FH  join '[]:[]', @out;
-            print FH "\n";
+            print FH  csvline(@out);
             $count++;
         }
+        
+        #tidy up
         close FH;
         $exportcheck = scalar @Undo; 
         track("$count channels exported");
         mylog(0, "    $count channels exported");
-        SimpleBox("$count channels exported to 'channels.export'");
+        SimpleBox("$count channels exported to $fname");
     };
     postmortem($@) if ($@);
 }
 
 
 sub Save{
+
     eval{
-        #update database and exit
+        #update database
         track();
         mylog(0,'Saving');
 
@@ -1525,7 +1754,7 @@ sub Save{
             SimpleBox('There are no changes to save to the database.');
             return;
         }  
-        
+
         Export() if ((scalar @Undo != $exportcheck) && (CheckOk("Your export file is not up to date\nUpdate it now?") eq 'ok'));
 
         my $text= "\nYou have chosen to delete $counts{D} channels,";
@@ -1538,7 +1767,6 @@ sub Save{
         }
         my $reply=CheckOk($text);
         return if ($reply ne 'ok');
-        
         mylog(0,"    Updating database:  demo=$demo");
         mylog(0,"    Will delete $counts{D}, modify $counts{'M'}");
 
@@ -1549,18 +1777,25 @@ sub Save{
                 ModifyChannel($_);
             }
         } 
-        
-        #reset the undo stack, clear QUM, mark duplicates etc
+
+        #reset the undo stack, clear IUM, mark duplicates etc
         @UndoPointer=(0);
         @Undo=();
         $exportcheck=0;
         for (sort keys %ChanData){
             substr($ChanData{$_}{Flags},5,3)='...'; 
         } 
+        
+        #set sort data
+        $SortChoice='ChanId';
+        @sorted=sort {$a<=>$b} keys %ChanData;
         TidyData();
-        ShowLog();
+        refresh();
+        #   or could:  ShowLog(scalar @log-$scroll{height});
+        SimpleBox("Database has been updated!\n");
     };
     postmortem($@) if ($@);
+
 }
 
 sub ModifyChannel{
@@ -1582,11 +1817,6 @@ sub ModifyChannel{
         for $k (sort keys %hash){
             if (defined $ChanData{$id}{$k}){
                 $v=$ChanData{$id}{$k}; 
-
-                #$v=~ s/^\s+//;    #strip leading and trailing spaces (Chan num needs this)
-                #$v =~ s/\s+$//;
-                #but not any more! 7/7/2016
-
                 if ($hash{$k} ne $v){
                     $hash{$k} = $v;
                     $logtext .= "  $k";
@@ -1623,7 +1853,7 @@ sub DeleteChannel{
 }
 
 sub exitscript{
-    exit if scalar @Undo ==0;
+    exit unless $ChangesMade;
     return if (CheckOk('Changes have been made.  Really exit?') ne 'ok');
     exit 0;
 }
@@ -1699,8 +1929,6 @@ sub NewSort{
         mylog(0,"NewSort $SortChoice");
         $ViewChoice=$LastChannelView;       #force back to most recent channel view from mpx/log 
 
-
-
         my @fields= split ':',$sortitems{$SortChoice}[1];
 
         $LastSortChoice=$SortChoice;
@@ -1730,15 +1958,25 @@ sub sortx{
         s/-//;
     }
 
-    if (/^[d|Q|U|M|E|C]$/){
+    if (/^[d|U|M|E|C]$/){
         return state($A, $_) <=> state($B, $_);
-    }
+    }elsif (/^I$/){
+		#sort by import flag:  Q then numeric.
+		
+		my $f1=substr($ChanData{$A}{Flags},5,1);
+		$f1=index('Q.012345678',$f1);
+		
+		my $f2=substr($ChanData{$B}{Flags},5,1);
+		$f2=index('Q.012345678',$f2);
+		return $f2 <=>$f1;
+	} 
+
     my $type=$sortitems{$_}[2];
 
     if ($type ==2){
         return ($ChanData{$A}{$_} cmp $ChanData{$B}{$_});
     }elsif ($type ==1){
-        return ($ChanData{$A}{$_} <=> $ChanData{$B}{$_});
+		return ($ChanData{$A}{$_} <=> $ChanData{$B}{$_});
     }else{
          postmortem("Error in sortx $_ type $type");
     }
@@ -1786,9 +2024,11 @@ sub ChooseDisplay{
     mylog(0,"ChooseDisplay $ViewChoice"); track();
     $LastChannelView=$ViewChoice;
     if ($ViewChoice eq 'Normal'){
-        @columnswanted=qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
+        @columnswanted=qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign ServiceId/;
     }elsif ($ViewChoice eq 'ChannelName'){
         @columnswanted=qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign ChannelName/;
+    }elsif ($ViewChoice eq 'XMLTVID'){
+        @columnswanted=qw/ChanId ChanNum SourceId MplexId FrequencyId Flags CallSign XMLTVID/;
     }elsif ($ViewChoice eq 'Extra'){
         @columnswanted=qw/ChanId ChanNum SourceId MplexId Flags CallSign/;
         push @columnswanted, $Extra;
@@ -2476,7 +2716,7 @@ sub InterrogateBackend{
             track("id=$_");
             #new state code
             $ChanData{$_}{Flags}='........';
-            $ChanData{$_}{OldCallSign}='';
+            #$ChanData{$_}{OldCallSign}='';
 
             #count channels for multiplex listing
             my $k = "$ChanData{$_}{SourceId}";
