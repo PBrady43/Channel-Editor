@@ -8,7 +8,7 @@ This is a channel editor for MythTV.  It uses the MythTv API interface.
 For command line options use --help
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 6 Dec 2017.
+Phil Brady, 621 Feb 2018.
 =cut
 
 
@@ -23,7 +23,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version='2.20 (tkl06)   3 Feb 2018';
+my $version='2.21 (tkm01)   28 Feb 2018';
 my $regressiontest=0;      #developer switch (old export format)
 
 
@@ -161,13 +161,31 @@ my $regressiontest=0;      #developer switch (old export format)
 #3Feb2018.  decrement $ChangesMade on undo
 #released version 2.20 
 
+#21 Feb 2018
+#allow file selection for import/export: tkm01
+#bugfix:  inconsistencies in $exportcheck fixed.  Should correctly remind to take CSV file on save.
+#added timestamp and program version no to csv file
+
+#25Feb2018
+#fix bug reported by diyhouse:  header stuff missing when generating sd source files.
+#allow selection of postmortem name
+
+#27Feb2018
+#improved xmltv matching:
+  #bug fix in xmlkey:  ( and ) needed escaping.
+  #added match rule 1hour -> 1
+
+#28Feb2018
+#if ask user to specify spoof file if -sp and file missing or unspecified.
+#Remove vec at start - we no longer need to pre-size a huge array for display data.
+#Version 2.21 released.
+ 
+
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
-
 my $showdata='';
-vec($showdata, 2**13-1, 8)=0;
-$showdata = '';
+#   vec($showdata, 2**13-1, 8)=0;   #pre-size - removed 28/2/18
 
 my $backend; my $spoof; my %ChanData; my %MplexInfo;my %sources;my $nodemo=0; my $demo=1;
 my $Extra; my $help=0;
@@ -441,6 +459,8 @@ exit 0;
 
 sub DevOption{
 	#developer code - ignore
+	return;
+	
 	#add ServiceId to tutorial.diags
 	my $dummy=32900; my $sid;
 	open IN,"<tutorial.diags";
@@ -531,7 +551,7 @@ sub event{
     eval{
         # expect Home, End, Prior, Next, Up, Down, Resize. See %scroll. 
         my $event=$_[0];
-        mylog(0,"event: $event");
+        #mylog(0,"event: $event");
         if ($event =~ /^Shift_/){$scroll{Shifting}= 'Shift'; return};
         my $more=0;
         if ($event eq 'plus'){$scroll{size}+=2; $more=1};   #bigger font
@@ -632,7 +652,23 @@ sub preamble{
         my $text="unset";
         track();
         ReSize();    #measure height of pane
-        if (defined $spoof){$demo=1; $text=$spoof};
+        
+        
+		#check validity of $spoof:
+		# not specified:  undefined so normal run
+		#  blank - -sp specified so ask
+		#  value given file not exists:  ask.
+
+		if (defined $spoof){
+			unless (($spoof ne '') and (-e $spoof)){
+				my $types=[	['Diagnostic file', '.diags',],];
+				$spoof=$main->getOpenFile(-filetypes=>$types,-defaultextension => '.diags', 
+						  -title => 'Please select spoof file');
+				exit 0 unless defined $spoof;
+			}
+			$demo=1; $text=$spoof;
+		};
+
         mylog(0, "$0  Version=$version, demo=$demo,");
         mylog(0, "    spoof=$text, os=$^O");
 
@@ -948,7 +984,7 @@ sub EditUndo{
         }
         TidyData();
         refresh($scroll{first});
-        $exportcheck=-1 if $exportcheck>scalar @Undo;    #check for export reminder
+        $exportcheck=-1 if $exportcheck>$ChangesMade;    #Force export reminder if stack undone beyond last import/export
     };
     postmortem($@) if ($@);   
 }
@@ -1059,9 +1095,14 @@ sub postmortem{
 sub Diagnostics{
 
    
-    #show log
+    #Select output file
+    
     my $filename= 'chedit'. TimeStamp() .'.diags'; 
- 
+    
+    my $types=[	['Postmortem file', '.diags',],];
+	$filename=$main->getSaveFile(-filetypes =>$types,-defaultextension => '.diags',
+	                    -title=>'Select postmortem file', -initialfile=>$filename);
+	return unless defined $filename;
     my $temp;
 
     unless (open DI, ">$filename") {SimpleBox("Cannot open $filename $!"); return};
@@ -1178,7 +1219,7 @@ sub XMLTVBox{
        'UK Radio Times'         =>    ['/usr/share/xmltv/tv_grab_uk_rt/channel_ids', 'rt'],
        'XML file (eg SD json)'  =>    ['', 'xml'],
     );
-    if ($spoof){
+    if (defined $spoof){
         $XMLTVtypes{Tutorial}   =  [$spoof, 'xml'],
     }
 
@@ -1402,8 +1443,11 @@ sub Import{
         track('importing');
         my $csv=0;
         my $filename='channels.export';
-        if ((-e 'channels.csv') && ($regressiontest==0)){ 
-			$filename  ='channels.csv';
+
+        if ($regressiontest==0){ 
+			my $types=[	['CSV files', '.csv',],];
+			$filename=$main->getOpenFile(-filetypes=>$types,-defaultextension => '.csv', -title => 'Choose .csv file to import');
+			return unless defined $filename;
 			$csv=1;
 		}
         mylog(0,"Importing $filename");
@@ -1417,6 +1461,7 @@ sub Import{
 
         #read heading from import file
         chomp ($_=<FH>);
+        while (/^#/){chomp ($_=<FH>)};   #skip over comment lines
         
         my $freqtype= 'FrequencyId';    #a version 1 remnant
         mylog(0,"freqtype=$freqtype");
@@ -1532,12 +1577,16 @@ sub Import{
         #
         #now change values
         #
-
-        <FH>;  #skip headings
+		#skip headings and initial comments
+        $_=<FH>;  
+        while (/^#/){$_=<FH>};
+        
+        #now read bulk of file
         while ($_=<FH>){
             chomp;
             $linecount++;
 			next if (/^#/);    #skip comment lines
+			
             if (exists $line2chanid{$linecount}){
                 @values=csvparse($csv,$_);
                 push @values, '' if @headings>@values;  #fix if last one blank
@@ -1605,7 +1654,7 @@ sub Import{
         }
         $SortChoice='Import rule';
         NewSort();
-        $exportcheck = scalar @Undo;     #export checking   
+        $exportcheck = $ChangesMade;     #export checking   
         SimpleBox($out);
     };
     postmortem($@) if ($@);
@@ -1691,14 +1740,24 @@ sub Export{
     eval{
         #export state of play
         track();
-        my $fname='channels.csv';
+        #Select output file
+        my $types=[	['CSV files', '.csv',],];
+		my $fname=$main->getSaveFile(-filetypes=>$types,-defaultextension => '.csv',-title=>'Select export .csv file');
+		return unless defined $fname;
+
         if ($regressiontest){$fname='channels.export'};
         mylog(0,"\nExporting to $fname"); 
         unless (open  FH, ">$fname"){SimpleBox("Cannot open $fname"); return};
         
+        
         #headings
         my @fields= columnlist('X'); 
         print FH csvline('ChanId',@fields);   #headings
+         
+         #date comment at start
+        $_ = `date`;
+        s/\n//;
+        print FH "#\n#,csv file written by chedit2 version #$version\n#\n";
         
         #comment line
         my @out=('#NoEdit');
@@ -1726,7 +1785,7 @@ sub Export{
         
         #tidy up
         close FH;
-        $exportcheck = scalar @Undo; 
+        $exportcheck = $ChangesMade; 
         track("$count channels exported");
         mylog(0, "    $count channels exported");
         SimpleBox("$count channels exported to $fname");
@@ -1755,7 +1814,7 @@ sub Save{
             return;
         }  
 
-        Export() if ((scalar @Undo != $exportcheck) && (CheckOk("Your export file is not up to date\nUpdate it now?") eq 'ok'));
+        Export() if (($exportcheck != $ChangesMade) && (CheckOk("Your export file is not up to date\nUpdate it now?") eq 'ok'));
 
         my $text= "\nYou have chosen to delete $counts{D} channels,";
         $text .= "\n and modify $counts{M} channels.\n";
@@ -1782,6 +1841,7 @@ sub Save{
         @UndoPointer=(0);
         @Undo=();
         $exportcheck=0;
+        $ChangesMade=0;
         for (sort keys %ChanData){
             substr($ChanData{$_}{Flags},5,3)='...'; 
         } 
@@ -1854,7 +1914,7 @@ sub DeleteChannel{
 
 sub exitscript{
     exit unless $ChangesMade;
-    return if (CheckOk('Changes have been made.  Really exit?') ne 'ok');
+    return if (CheckOk("Changes have been made but you have not updated database.\n  Really exit?") ne 'ok');
     exit 0;
 }
 
@@ -2153,6 +2213,8 @@ sub refresh{
        }
        $showdata .= "\n" x $pad;   #add extra blanks at end (otherwise height in resizing fails)
        $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');
+       #mylog(0,"len=".length $showdata);
+       
     };
     postmortem($@) if ($@);
 }  
@@ -2213,11 +2275,13 @@ sub CreateCustomSort{
 sub xmlkey{
     (my $k)= @_;
     #index the xmlt matching hash with these keys    
-    $k =~s/[\s():]//g; $k =lc($k);
+    $k=~ s/[\s\(\):]//g; $k =lc($k);
     $k=~ s/plus1hour/+1/;
     $k=~s/plus/+/;
     $k=~s/one/1/g;
     $k=~s/star/*/;
+    $k=~s/&/and/g;
+    $k=~s/1hour$/1/g;
     return $k;
 }
 
@@ -2266,7 +2330,6 @@ sub ImportXMLTV{
         return if (!defined $filename);
         unless (open  XM, '<', $filename) {SimpleBox("Cannot open xmltv listing file"); return};
         mylog(0,"    ImportXMLTV listing file $filename  type $FileType");
-        #END REMOVED
 
         #now read xmltv file
         my $k2; my $matches=0;
@@ -2441,8 +2504,7 @@ sub ShowXMLTV{
         }
         $showdata .= "\n" x $pad;
         $headings -> configure(-text => $header, -anchor =>"nw", -justify=>'left');
-        $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');
-        return;
+        $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');       
     };
     postmortem($@) if ($@);
 }
@@ -2556,10 +2618,9 @@ sub CreateSDConfig{
         track();
         mylog(0,'CreateXMLTVConfig');
 
-        my %xmls; my $id; my $outtext=''; 
-        my $sourcesdone=0;
+        my %xmls; my $id; my $outtext="Summary:\n"; my $sourcesdone=0;
         #do each source
-        for my $source (keys %sources){
+        for my $source (sort keys %sources){
             my $errors=0;
             my $sourcename=$sources{$source}{SourceName};
             next unless (CheckOk("Generate $sourcename.xmltv\nfor source $source?") eq 'ok');
@@ -2586,6 +2647,15 @@ sub CreateSDConfig{
             unless (open OUT, ">${sourcename}.xmltv") {SimpleBox("Cannot write to {sourcename}.xmltv"); return};;
             my $count=0; my $char;
             mylog(0,"  Reading config file $configfile; writing ${sourcename}.xmltv");
+            
+            #copy header stuff with authentication etc
+            while (<IN>){
+                unless (/^channel[=!](.*)/){print OUT "$_"};
+            }
+            close IN;
+            
+            #reopen and re-scan for 'channel=' or 'channel!'
+            unless (open IN, "<$configfile") {SimpleBox("Cannot read from config file $configfile"); return}; 
             while (<IN>){
                 chomp;
                 if (/^channel[=!](.*)/){
@@ -2600,6 +2670,7 @@ sub CreateSDConfig{
                     print OUT "channel$char$id\n";
                     $count++; $xmls{$id} = 2+($xmls{$id} %2);   #indicate dealt with this before.
                 }
+				
             }
             close IN;
 
@@ -2614,7 +2685,7 @@ sub CreateSDConfig{
                 }
             }
             close OUT;
-            if ($errors){SimpleBox("$errors errors found - please check log")};
+            if ($errors){SimpleBox("$errors warnings found - please check log")};
             $outtext .= "$count channels in ${sourcename}.xmltv\n";
             mylog(0,"  $count channels in ${sourcename}.xmltv");
         }
@@ -2760,7 +2831,7 @@ sub InvalidExtra{
 sub Version{
     my $out= "MythTV Channel Editor\nVersion $version";
     $out .= "\n\nGPL license conditions\n\n";
-    $out .= "Phil Brady 2016~2017\n\nContact via:\nPhilB at MythTV Forum\n";
+    $out .= "Phil Brady 2016~2018\n\nContact via:\nPhilB at MythTV Forum\n";
     $out .= 'or phildotbrady@hotmaildotcodotuk';
     $out =~ s/dot/./g;
     SimpleBox($out);
