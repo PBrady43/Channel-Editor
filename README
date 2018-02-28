@@ -5,6 +5,7 @@ Files are:
 chedit2.pl         version 2.21   (28 Feb 2018).
 scan_database.pm   a supporting perl module
 tutorial.diags     Sample UK data to allow the tutorial.
+chedit.pl          Obsolete version 1.  Please use chedit2.
 
 Full details and documentation can be found in the mythTV wiki at:
 
