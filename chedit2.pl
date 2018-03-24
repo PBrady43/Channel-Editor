@@ -8,7 +8,7 @@ This is a channel editor for MythTV.  It uses the MythTv API interface.
 For command line options use --help
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 621 Feb 2018.
+Phil Brady, 16 March 2018.
 =cut
 
 
@@ -23,7 +23,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version='2.21 (tkm01)   28 Feb 2018';
+my $version='2.22 (tkm04)   24 March 2018';
 my $regressiontest=0;      #developer switch (old export format)
 
 
@@ -180,12 +180,33 @@ my $regressiontest=0;      #developer switch (old export format)
 #Remove vec at start - we no longer need to pre-size a huge array for display data.
 #Version 2.21 released.
  
+#1 Mar 2018
+#More meaningful csv reminder before database save.
+
+#2March2018
+#Added new matching rule 8.  Source:Callsign.  Version 2.22 beta.
+#Added undo stack view
+
+#10 Mar 2018
+#bugfix:  warning of negative $pad in refresh afer XMLTVID commit.  CommitXMLTV & GiveLimits changed.
+
+#12 March 2018
+#check in CreateSDConfig that input and output files are not the same.
+#simplify generation of xmltvid files
+
+#21March 2018
+#typo in import:  Src:Callsign in stats. 
+#
+#24March2018
+#ok/cancel changed to more logical yes/no
+#Version 2.22 general release.
 
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
 my $showdata='';
 #   vec($showdata, 2**13-1, 8)=0;   #pre-size - removed 28/2/18
+
 
 my $backend; my $spoof; my %ChanData; my %MplexInfo;my %sources;my $nodemo=0; my $demo=1;
 my $Extra; my $help=0;
@@ -234,7 +255,7 @@ my %scroll=(
     height      => 32,     #height of label in 14 font lines
     first       => 0,
     total       => 600,
-    view        => 0,
+    view        => 0,    #1-chans, 2=mpxs, 3=log, 4=xmltv matches, 5=undo stack
     one         => 1,
     zero        => 0,
     Shifting    => '',
@@ -362,13 +383,16 @@ eval{
       $ViewMenu -> radiobutton(-label => "Show $Extra", -variable=>\$ViewChoice, 
                         -value=>'Extra', -command=> \&ChooseDisplay);
     }
+    
     $ViewMenu -> radiobutton(-label => "Show custom columns", -variable=>\$ViewChoice, -value=>'custom',
                              -command=> \&ChooseDisplay);
     $ViewMenu -> separator();
     $ViewMenu -> radiobutton(-label => "Show multiplexes", -variable=>\$ViewChoice, -value=>'Mpxs',
                                           -command      => \&ListMultiplexes);              
     $ViewMenu -> radiobutton(-label => "Show log", -variable=>\$ViewChoice, -value=>'Log',
-                                                  -command      => \&ShowLog);
+                                           -command      => \&ShowLog);
+    $ViewMenu -> radiobutton(-label =>'Show Undos', , -variable=>\$ViewChoice, -value=>'Undos',
+				                           -command => \&ShowUndos);                                             
     $ViewMenu ->  separator();
     $ViewMenu ->  radiobutton(-label=>"Define Custom columns", -variable=>\$ViewChoice, -command=> sub{&CreateColumns});
 	$ViewMenu ->  separator();
@@ -399,7 +423,6 @@ eval{
           [ Button => "Bulk by Source:mpx",   -command   => \&EditbyMpx],
           [ Button => "Bulk by CallSign",     -command   => \&EditbyName],
           #[ Button => "Delete Duplicate ServiceIds",-command   => \&DeleteDuplicateSid],
-          #[ Button => 'Dev option', -command => \&DevOption],
           [ Separator =>''],
           [ Button => "Undo",         -command   => sub{&EditUndo(0)}],
           [ Button => "Undo all",     -command   => sub{&EditUndo(1)}],
@@ -418,9 +441,9 @@ eval{
 
     track('creating help menu');
     my $HelpMenu  = $menubar -> Menubutton(-text => "Help", -menuitems  => [
-          [ Button => "Version",           -command   => \&Version], 
-          [ Button => "Open wki",          -command  => \&helpwiki],
-          [ Button => "Diagnostics",       -command   => \&Diagnostics],
+          [ Button => "Version",           -command  => \&Version], 
+          [ Button => "Open wiki",         -command  => \&helpwiki],
+          [ Button => "Diagnostics",       -command  => \&Diagnostics],
           ]) ->pack(-side => "left");
 
     #column headings
@@ -448,42 +471,56 @@ eval{
     NewSort('id');
     $text .="\n\nRestart with --nodemo if you really intend changing the database." if $demo;
     $text .="\n------------\nPlease note\n";
-    $text .="With ok/cancel boxes (such as this) the return key gives 'ok' action.\nUse mouse click or tab then space to cancel.";
+    $text .="With yes/no boxes (such as this) the return key gives 'yes' action.\nUse mouse click or tab then space for 'no'.";
     $text .="\n\n Now click either to continue";
-    CheckOk("Note: $text");
+    yes("Note: $text");
 
     MainLoop;
 };
 postmortem($@) if ($@);
 exit 0;
 
-sub DevOption{
-	#developer code - ignore
-	return;
-	
-	#add ServiceId to tutorial.diags
-	my $dummy=32900; my $sid;
-	open IN,"<tutorial.diags";
-	open OUT,"> tutorial2.diags";
-	while ($_=<IN>){
-		print OUT $_;
-		if (/ChanId/){
-			/\<ChanId\>(\d*)\</;
-			if ($1==1792){
-					$sid=8330;      #ITV4
-			}elsif (defined $ChanData{$1}){
-					$sid=$ChanData{$1}{ServiceId};
-			}else{     #creat an artificial one
-				$sid=$dummy++;
-			}
-			print OUT "<ServiceId>$sid</ServiceId>\n";
+sub ShowUndos{
+
+    eval{
+        track();
+        my $first=$_[0];
+        $first ||=0;
+        unless (defined($first)){mylog(0,'ShowUndos')};
+        $scroll{first}=$first;
+        $scroll{view}=5;
+        $scroll{total}=scalar(@Undo);
+        (my $last, my $pad)=GiveLimits();    
+      
+        my $text=' |     Chid' . sprintf($columns{CallSign}[1], 'CallSign').' flags     Parameter';
+        $headings -> configure(-text => $text, -anchor =>"nw", -justify=>'left');
+        $text='';
+        
+        
+        #create hash of undo starts so we can split them
+        my $L= scalar @Undo -1;
+        my %pointers;
+        for (@UndoPointer){
+			$pointers{$L-$_}=1;
 		}
-	}
-	
-	close IN;
-	close OUT;
-	exit 0;
-}
+		my $count=0;
+		my @RevUndo=reverse(@Undo);
+        for ($first .. $last){
+			(my $chid, my $flags, my $param, my $val)=split /:/, $RevUndo[$_],4;
+			my $start=$pointers{$_}?' -->':' |  ';
+			$text.=  $start . sprintf("%7d", $chid);
+			$text .= sprintf($columns{CallSign}[1], $ChanData{$chid}{CallSign});
+			$text .=" $flags";
+			if ($param ne '') {$text .= "  $param -> $val"} ;
+			$text .="\n";
+			
+        }
+        $text .=  "\n" x $pad;
+        $pane -> configure(-text => $text, -anchor =>"nw", -justify=>'left'); 
+     };
+     postmortem($@) if ($@);  
+}	
+
 
 
 sub DeleteDuplicateSid{
@@ -523,8 +560,6 @@ sub DeleteDuplicateSid{
 			}			
 		}
 		TidyData();
-		#Show data
-		#refresh($scroll{first});
 		refresh();
 		SimpleBox("$count channels marked for deletion");
 	};
@@ -586,17 +621,17 @@ sub event{
         track("event: $event first=$f");
         $_=$scroll{view};
         if (/0/){ #during startup - no action
-        }elsif (/1/){
+        } elsif (/1/){
             refresh($f);   #display channels
         } elsif (/2/){
             ListMultiplexes($f);
-        
         } elsif (/3/){
             ShowLog($f);
-            
         } elsif (/4/){
             ShowXMLTV($f);
-        }else{
+        } elsif (/5/){
+			ShowUndos($f);
+        } else{
             postmortem("Unexpected view $scroll{view} in event");
         }
     };
@@ -725,7 +760,7 @@ sub EditSelection{
  
         }
         
-        return unless &CheckOk(scalar @selection . " channels selected\nIs this right?") eq 'ok';
+        return unless yes(scalar @selection . " channels selected\nIs this right?");
    
         ClearUflags();
 
@@ -737,6 +772,9 @@ sub EditSelection{
                 SetNewValue($_, $param, $ChanData{$_}{$param} +$SetValue);
             }else{
                 SetNewValue($_, $param, $SetValue);
+                #if ("$param#$SetValue" eq 'Visible#false'){
+				#	SetNewValue($_, 'UseEIT', 'false');        #clear EIT if no longer visible
+				#}
             }
         }
         mylog(0,'  changes done');
@@ -745,6 +783,7 @@ sub EditSelection{
         refresh($scroll{first});
     };
     postmortem($@) if ($@);
+
 }
 
 sub ClearUflags{
@@ -938,6 +977,10 @@ sub EditSingle{
         for (keys %hash){
             if ($ChanData{$id}{$_} ne $hash{$_}){
                 SetNewValue($id, $_, $hash{$_});
+                #if ("$_#$hash{$_}" eq 'Visible#false'){
+				#	SetNewValue($id, 'UseEIT', 'false');        #clear EIT if no longer visible
+				#	$count++; $text .='UseEIT ';
+				#}
                 $count++;
                 $text .="$_ ";
                 mylog(0,"  $_ set to $hash{$_}");
@@ -1003,6 +1046,7 @@ sub ShowLog{
     eval{
         track();
         my $first=$_[0];
+        $first ||=0;
         $first ||=0;
         unless (defined($first)){mylog(0,'ShowLog')};
         $scroll{first}=$first;
@@ -1087,8 +1131,7 @@ sub postmortem{
     $myerror= "There has been a fatal error\n$myerror\n";
     $myerror .= "We cannot continue.\nDo you want diagnostics?";
 
-    my $reply=&CheckOk($myerror);
-    &Diagnostics if ($reply eq 'ok');
+    &Diagnostics if yes($myerror);
     exit 0;
 }
 
@@ -1217,7 +1260,7 @@ sub XMLTVBox{
     my %XMLTVtypes=(
        'UK Atlas'               =>    ['~/.xmltv/tv_grab_uk_atlas.map.channels.conf', 'atlas'],
        'UK Radio Times'         =>    ['/usr/share/xmltv/tv_grab_uk_rt/channel_ids', 'rt'],
-       'XML file (eg SD json)'  =>    ['', 'xml'],
+       'XML file (eg SD json)'  =>    ['~/.xmltv/*.xml', 'xml'],
     );
     if (defined $spoof){
         $XMLTVtypes{Tutorial}   =  [$spoof, 'xml'],
@@ -1237,7 +1280,6 @@ sub XMLTVBox{
                 -> pack(-anchor => 'w');
         }
         $box -> Show();
-
     }
     return ($XMLTVtypes{$xmlchoice}[0], $XMLTVtypes{$xmlchoice}[1]); 
 }
@@ -1285,20 +1327,18 @@ sub BulkEditBox{
 
 }
 
-sub CheckOk{
-    (my $question)=@_;
+sub yes{
+   (my $question)=@_;
  
     my $box=$main->DialogBox(
         -title => 'Channel Editor',
-        -buttons => ['ok','cancel'],
-        -default_button => "ok");
-    $box-> add("Label",
-                -text => "$question   ")->pack;
+        -buttons => ['yes','no'],
+        -default_button => "yes");
+    $box-> add("Label", -text => "$question   ")->pack;
     my $reply = $box -> Show();
-    $reply='cancel' if (!defined $reply);
-    return $reply;
-}
-
+    $reply='no' if (!defined $reply);
+    return ($reply eq 'yes'?1:0);
+}	
 
 #---- TidyData Routine(s) -----
 
@@ -1477,14 +1517,14 @@ sub Import{
 			if (scalar @out){SimpleBox("Missing, spurious or duplicated headings:\n" . join "\n",@out); return};
         }
                 
-        @ruleset=(1..7);       # Rules applied during matching.  safe to change.
+        @ruleset=(1..8);       # Rules applied during matching.  safe to change.
         if ($csv){
 			my $out="Importing from channels.csv.\n\nUse ChanId only for matching?\n\n";
 			$out .= "This will give 100% matching but will not be appropriate if:    \n";
 			$out.= "   you have changed ChanId in the csv file\n -- OR --\n";
 			$out .= "   You have rescanned tuners since export.\n";
-			$out .= "Cancel in these circumstances\n";
-			if (CheckOk($out) eq 'ok'){@ruleset=(0)};
+			$out .= "Select 'no' in these circumstances\n";
+			if (yes($out)){@ruleset=(0)};
 		}
 		
         #read values from import file - record fingerprints
@@ -1635,7 +1675,7 @@ sub Import{
         #log the rule stats
         mylog(0,'Import rule stats');
         my @text=('Chanid', 'ServiceId','FreqId:ServiceId', 'ServiceId (!=ChanNo)', 'ServiceId (=ChanNo)', 
-                      'Callsign', 'ChanNo:CallSign', 'Src:Freq:CallSign');
+                      'Callsign', 'ChanNo:CallSign', 'Src:Freq:CallSign','Src:Callsign');
         
         for (sort @ruleset){
 			mylog(0,"       Rule $_  $rulestats[$_]     $text[$_]");
@@ -1685,6 +1725,8 @@ sub fingerprint{
 		return "6:$chno:$name";
 	}elsif ($rule==7){					#general
 		return "7:$src:$freq:$name";
+	}elsif ($rule==8){
+		return "8:$src:$name";
 	}else{
 		postmortem ("Import rule $rule missing");
 	}
@@ -1757,7 +1799,8 @@ sub Export{
          #date comment at start
         $_ = `date`;
         s/\n//;
-        print FH "#\n#,csv file written by chedit2 version #$version\n#\n";
+        print FH "#\n#,csv file written by chedit2 version #$version\n";
+        print FH "#,File created $_\n#\n";
         
         #comment line
         my @out=('#NoEdit');
@@ -1814,7 +1857,7 @@ sub Save{
             return;
         }  
 
-        Export() if (($exportcheck != $ChangesMade) && (CheckOk("Your export file is not up to date\nUpdate it now?") eq 'ok'));
+        Export() if (($exportcheck != $ChangesMade) && (yes("You do not have an up to date csv file.\nWrite one now?")));
 
         my $text= "\nYou have chosen to delete $counts{D} channels,";
         $text .= "\n and modify $counts{M} channels.\n";
@@ -1824,8 +1867,8 @@ sub Save{
         }else{
             $text .="\n\n .. but you are in demo mode only\nNothing will change on backend.";
         }
-        my $reply=CheckOk($text);
-        return if ($reply ne 'ok');
+        return if yes($text);
+        
         mylog(0,"    Updating database:  demo=$demo");
         mylog(0,"    Will delete $counts{D}, modify $counts{'M'}");
 
@@ -1914,8 +1957,8 @@ sub DeleteChannel{
 
 sub exitscript{
     exit unless $ChangesMade;
-    return if (CheckOk("Changes have been made but you have not updated database.\n  Really exit?") ne 'ok');
-    exit 0;
+    exit 0 if (yes("Changes have been made but you have not updated database.\n  Really exit?"));
+    return;
 }
 
 
@@ -2159,15 +2202,17 @@ sub GiveLimits{
     
     #how many blank lines at end?
     my $pad= $scroll{height}-$first+$last-1;  #to fill pane
+    if ($pad<0){mylog ("Givelimits pad=$pad ht=$scroll{height} first=$first last=$last"), $pad=0};
     $pad+=10;    #to reduce screen flashing after resize
     return ($last, $pad);
 }
-    
+
     
 sub refresh{
 
    eval{
        track();
+       if ($scroll{view} !=1){$scroll{view}=1; $ViewChoice='Normal'};
        #set up for scrolling
        my $first=$_[0];
        unless (defined($first)){mylog(0,'Refreshing')};
@@ -2282,6 +2327,7 @@ sub xmlkey{
     $k=~s/star/*/;
     $k=~s/&/and/g;
     $k=~s/1hour$/1/g;
+    unless ($k =~/itv$/){$k =~s/tv$//};
     return $k;
 }
 
@@ -2324,8 +2370,7 @@ sub ImportXMLTV{
         my ($filename, $FileType) = XMLTVBox();
 
         #open xmltv listing file
-  
-        #open xmltv listing file
+    
         $filename=ChooseWildcard($filename,'with callsign to XMLTVID mapping');
         return if (!defined $filename);
         unless (open  XM, '<', $filename) {SimpleBox("Cannot open xmltv listing file"); return};
@@ -2504,7 +2549,7 @@ sub ShowXMLTV{
         }
         $showdata .= "\n" x $pad;
         $headings -> configure(-text => $header, -anchor =>"nw", -justify=>'left');
-        $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');       
+        $pane -> configure(-text => $showdata, -anchor =>"nw", -justify=>'left');    
     };
     postmortem($@) if ($@);
 }
@@ -2524,7 +2569,7 @@ sub MatchXMLTV{
         my $L=scalar(keys %xmlhash)-1;
         if (($d<0) || ($d > $L) || ($x<0) || ($x>$L) || ($x==$d)){ SimpleBox("Invalid row"); return};
         my ($dname, $xname) = (sort keys %xmlhash)[$d, $x];
-        return unless (&CheckOk("Matching: $xmlhash{$dname}{CallSign} -> $xmlhash{$xname}{XMLTVname}") eq 'ok');
+        return unless (yes("Match: $xmlhash{$dname}{CallSign} -> $xmlhash{$xname}{XMLTVname} ?"));
         MatchXMLTVdetail($dname, $xname);
         ShowXMLTV($scroll{first});
         $xmltvmatchcount++;
@@ -2549,7 +2594,7 @@ sub MatchXMLTVdetail{
 sub ReadMergeLog{
     eval{
         return unless (-e 'channels.merges');
-        return if (CheckOk("Use previously saved XMLTV merges?") ne 'ok');
+        return unless (yes("Use previously saved XMLTV merges?"));
         unless (open  MERGES, '<channels.merges') {SimpleBox("Cannot open merge file"); return}; 
         mylog(0,"Reading merge log");    
         while (<MERGES>){
@@ -2581,19 +2626,23 @@ sub CommitXMLTV{
                 SetNewValue($_, 'XMLTVID', $xmlhash{$k}{XMLTVID});
             }
         }
-        TidyData();
-        refresh($scroll{first});
+        
+        #Show normal view   fix 10 Mar 2018
+        #TidyData();
+        #refresh($scroll{first});
+        $ViewChoice='Normal'; ChooseDisplay();
 
         #Write merge log out?
         return if $xmltvmatchcount==0;
         $_="XMLTVIDs have been written to the database image in memory.\n Do you now wish to save all the manual merges to a file for future use?";
-        return if (CheckOk($_) ne 'ok');
+        return unless (yes($_));
         unless (open  MERGES, '>channels.merges') {SimpleBox("Cannot open merge file"); return}; 
         mylog(0,"Writing merge log file");  
         print MERGES "# Merge log written " . TimeStamp() . "\n";  
         while ($_=shift @mergelog){print MERGES "$_\n"};
         close MERGES;   
         $xmltvmatchcount=0;
+        
     };
     postmortem($@) if ($@);
 }
@@ -2618,80 +2667,71 @@ sub CreateSDConfig{
         track();
         mylog(0,'CreateXMLTVConfig');
 
-        my %xmls; my $id; my $outtext="Summary:\n"; my $sourcesdone=0;
+        my %xmls; my $id; my $outtext="Summary:\n"; my $sourcesdone=0; 
         #do each source
         for my $source (sort keys %sources){
             my $errors=0;
             my $sourcename=$sources{$source}{SourceName};
-            next unless (CheckOk("Generate $sourcename.xmltv\nfor source $source?") eq 'ok');
+            next unless (yes("Generate $sourcename.xmltv\nfor source $source?"));
 
-            my $configfile=ChooseWildcard('~/.xmltv/*.conf ~/.mythtv/*.xmltv', "holding config for $sourcename");
+            my $configfile=ChooseWildcard('~/.xmltv/*.xmltv ~/.mythtv/*.xmltv', "holding config for $sourcename");
             next unless defined $configfile;
-
-            $sourcesdone++;
-            #get ids for channels in this source.  0=not needed, 1=needed.
-            %xmls=();
-            for (keys %ChanData){
-                if (($ChanData{$_}{SourceId} == $source) and ($ChanData{$_}{XMLTVID} !~ /^\s*$/)) {    #not blank or just spaces
-                        if (!defined $xmls{$ChanData{$_}{XMLTVID}}){$xmls{$ChanData{$_}{XMLTVID}}=0};
-                        if (($ChanData{$_}{Visible} eq 'true') and
-                            ($ChanData{$_}{UseEIT}  eq 'false')){
-                                  $xmls{$ChanData{$_}{XMLTVID}}=1;
-                        }
-                }
-            }
 
             #now edit input file for this source
 
             unless (open IN, "<$configfile") {SimpleBox("Cannot read from config file $configfile"); return};
+            if (-e "${sourcename}.xmltv"){
+				#check it isn't same as input file!
+				my $inodew=(stat ("${sourcename}.xmltv"))[1];
+				my $inoder=(stat($configfile))[1];
+				if ($inoder==$inodew){
+					SimpleBox("Cannot read and write the same file!"); return;
+				}
+			}
             unless (open OUT, ">${sourcename}.xmltv") {SimpleBox("Cannot write to {sourcename}.xmltv"); return};;
+            
+            $sourcesdone++;
             my $count=0; my $char;
             mylog(0,"  Reading config file $configfile; writing ${sourcename}.xmltv");
             
             #copy header stuff with authentication etc
+            my $needchannels=0;  #set if mode=channels
             while (<IN>){
                 unless (/^channel[=!](.*)/){print OUT "$_"};
+                s/\s//g;
+                if (/mode=channels/){$needchannels++};
             }
             close IN;
             
-            #reopen and re-scan for 'channel=' or 'channel!'
-            unless (open IN, "<$configfile") {SimpleBox("Cannot read from config file $configfile"); return}; 
-            while (<IN>){
-                chomp;
-                if (/^channel[=!](.*)/){
-                    $id=$1;
-                    if (!defined $xmls{$id}){$xmls{$id}=0};
-                     
-                    if ($xmls{$id} >1){
-                        $errors++;
-                        mylog(0, "  xmltvid $id duplicated in source file");
+            if ($needchannels){
+				#mode=channels so need to add channel xmltvids as needed.
+				#first get a list
+                %xmls=();
+                for (keys %ChanData){
+					if (($ChanData{$_}{SourceId} == $source) and ($ChanData{$_}{XMLTVID} !~ /^\s*$/)) {    #not blank or just spaces
+                        if (($ChanData{$_}{Visible} eq 'true') and
+                            ($ChanData{$_}{UseEIT}  eq 'false')){
+                                  $xmls{$ChanData{$_}{XMLTVID}}=1;
+                        }
                     }
-                    $char= ($xmls{$id} %2)?'=':'!';
-                    print OUT "channel$char$id\n";
-                    $count++; $xmls{$id} = 2+($xmls{$id} %2);   #indicate dealt with this before.
                 }
+                #now list them
+                for (sort keys %xmls){
+					print OUT "channel=$_\n";
+					$count++;
+				}
+				$outtext .= "$count channels in ${sourcename}.xmltv\n";
+				mylog(0,"  $count channels in ${sourcename}.xmltv");
 				
-            }
-            close IN;
-
-            #now check for ids in database but not input file:
-            for $id (sort keys %xmls){
-                if ($xmls{$id} <2){
-                    #entry in database but not input file
-                    $char= ($xmls{$id} %2)?'=':'!';
-                    print OUT "channel$char$id\n";
-                    $errors++; $count++;
-                    mylog(0,"  xmltvid $id added - found in database but not file.");
-                }
-            }
-            close OUT;
-            if ($errors){SimpleBox("$errors warnings found - please check log")};
-            $outtext .= "$count channels in ${sourcename}.xmltv\n";
-            mylog(0,"  $count channels in ${sourcename}.xmltv");
+			}else{
+				$outtext .= "source file is not mode channels.\nNo channels are needed in ${sourcename}.xmltv\n";
+				mylog(0," No channels needed in ${sourcename}.xmltv");
+			} 
+			close OUT;           
         }
         return if ($sourcesdone == 0);
         
-        $outtext .= "\nPlease check log and files.  Copy these to ~/.mythtv if error free";
+        $outtext .= "Copy file(s) to ~/.mythtv if error free";
         SimpleBox("$outtext\n");
         
     };
