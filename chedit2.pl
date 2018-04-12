@@ -23,7 +23,7 @@ use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version='2.22 (tkm04)   24 March 2018';
+my $version='2.23 (tkm05) 12 April 2018';
 my $regressiontest=0;      #developer switch (old export format)
 
 
@@ -119,7 +119,7 @@ my $regressiontest=0;      #developer switch (old export format)
 
 # 6 dec 2017
 #  sub fingerprint:  
-#     rule 1 breaks with US channel nos eg 1_3.  Use ne not != in test
+#     rule 1 breaks wiyesth US channel nos eg 1_3.  Use ne not != in test
 #     rule 0 changed to frequencyid:serviceid - does not impact UK channels but does US.
 #  default view  is serviceid
 #  bugfix:  sort by Query if queries in import.
@@ -201,6 +201,9 @@ my $regressiontest=0;      #developer switch (old export format)
 #ok/cancel changed to more logical yes/no
 #Version 2.22 general release.
 
+#12Apri2018
+#bug fix in sub save - 'do you wish to update' was reversed.
+#Version 2.23 released.
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
@@ -1867,7 +1870,7 @@ sub Save{
         }else{
             $text .="\n\n .. but you are in demo mode only\nNothing will change on backend.";
         }
-        return if yes($text);
+        return unless yes($text);   #bug fix 12Apr2018
         
         mylog(0,"    Updating database:  demo=$demo");
         mylog(0,"    Will delete $counts{D}, modify $counts{'M'}");
