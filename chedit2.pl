@@ -1,14 +1,16 @@
 #!/usr/bin/perl -w
 
-#for OSX, first line needs to be:
+#for OSX, first line needs to be changed to match perl version.  eg:
 #!/opt/local/bin/perl5.24 -w
+#  -- or --
+#!/opt/local/bin/perl5.26 -w
 
 =pod
 This is a channel editor for MythTV.  It uses the MythTv API interface.
 For command line options use --help
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 16 March 2018.
+Phil Brady, 2 May 2018.
 =cut
 
 
@@ -18,12 +20,13 @@ use Tk::Pane;
 use Tk::Dialog;
 use Tk::DialogBox;
 require Tk::LabEntry;
-
-use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 use Getopt::Long;
 use warnings FATAL => qw(uninitialized);
 
-my $version='2.23 (tkm05) 12 April 2018';
+use lib '.';    #add current dir if not already there
+use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
+
+my $version='2.25  (tkm06) 2 May 2018';
 my $regressiontest=0;      #developer switch (old export format)
 
 
@@ -205,6 +208,15 @@ my $regressiontest=0;      #developer switch (old export format)
 #bug fix in sub save - 'do you wish to update' was reversed.
 #Version 2.23 released.
 
+#25April2018
+#added use lib '.' at start because Macports perl version 5.26 does not include current dir in path.
+ 
+#28April2016
+#specify default filename chedit2.csv for csv export (otherwise a .diags file might be chosen)
+
+#2 May 2018
+# 2.22 released
+ 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
 my $showdata='';
@@ -1787,7 +1799,9 @@ sub Export{
         track();
         #Select output file
         my $types=[	['CSV files', '.csv',],];
-		my $fname=$main->getSaveFile(-filetypes=>$types,-defaultextension => '.csv',-title=>'Select export .csv file');
+		my $fname=$main->getSaveFile(-filetypes=>$types,-defaultextension => '.csv',
+			-title=>'Select export .csv file',
+			-initialfile=>'chedit2.csv');
 		return unless defined $fname;
 
         if ($regressiontest){$fname='channels.export'};
@@ -1802,7 +1816,7 @@ sub Export{
          #date comment at start
         $_ = `date`;
         s/\n//;
-        print FH "#\n#,csv file written by chedit2 version #$version\n";
+        print FH "#\n#,csv file written by chedit2 version $version\n";
         print FH "#,File created $_\n#\n";
         
         #comment line
