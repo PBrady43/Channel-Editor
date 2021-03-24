@@ -10,7 +10,9 @@ This is a channel editor for MythTV.  It uses the MythTv API interface.
 For command line options use --help
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 2 May 2018.
+Phil Brady, 2 May 2018.  Last moified 24/3/21 for myth version 31. 
+phil dot brady at hotmail dot co dot uk
+
 =cut
 
 
@@ -26,7 +28,7 @@ use warnings FATAL => qw(uninitialized);
 use lib '.';    #add current dir if not already there
 use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 
-my $version='2.25  (tkm06) 2 May 2018';
+my $version='2.26  24 March 2021';
 my $regressiontest=0;      #developer switch (old export format)
 
 
@@ -214,9 +216,13 @@ my $regressiontest=0;      #developer switch (old export format)
 #28April2016
 #specify default filename chedit2.csv for csv export (otherwise a .diags file might be chosen)
 
-#2 May 2018
-# 2.22 released
  
+#24 March 2021
+#  myth 31 introduced new property 'ExtendedVisible' into both ChannelInfo and UpdateDBChannel
+#  String values are 'Not Visible' or 'Visible'
+#  Added code to set this property to match property 'Visible' in sub  ModifyChannel
+#  Version 2.26
+
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
 my $showdata='';
@@ -1943,6 +1949,14 @@ sub ModifyChannel{
                 }
             }
         }
+        
+        #fix for Myth 31 which introduced a new parameter 'ExtendedVisible'
+        
+        if (defined $hash{ExtendedVisible}){
+			#we are running 31
+			$hash{ExtendedVisible}=($hash{Visible} eq 'true')?'Visible':'Not Visible';
+		}
+       
         if ($demo){$logtext = 'Demo: '.$logtext};
         mylog(0,$logtext);
         if ($demo==0){
@@ -2888,9 +2902,9 @@ sub InvalidExtra{
 sub Version{
     my $out= "MythTV Channel Editor\nVersion $version";
     $out .= "\n\nGPL license conditions\n\n";
-    $out .= "Phil Brady 2016~2018\n\nContact via:\nPhilB at MythTV Forum\n";
-    $out .= 'or phildotbrady@hotmaildotcodotuk';
-    $out =~ s/dot/./g;
+    $out .= "Phil Brady 2016~2021\n\nContact via:\nPhilB at MythTV Forum\n";
+    $out .= 'or phil dot brady@hotmail dot co dot uk';
+    #$out =~ s/dot/./g;
     SimpleBox($out);
 }
 
