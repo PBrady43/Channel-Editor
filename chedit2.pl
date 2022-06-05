@@ -10,7 +10,11 @@ This is a channel editor for MythTV.  It uses the MythTv API interface.
 For command line options use --help
 For full details and a tutorial see https://www.mythtv.org/wiki/Channel_Editor
 
-Phil Brady, 2 May 2018.  Last moified 24/3/21 for myth version 31. 
+Phil Brady, 2 May 2018.  
+24/3/21 Modified for myth version 31 - new parameter ExtraVisible.
+10 May 2022.  Changed API call VideoSourceList to GetVideoSourceList.
+Checked ok against port 6744 of myth v32 but scan_database.pm tweaked.
+  
 phil dot brady at hotmail dot co dot uk
 
 =cut
@@ -28,7 +32,7 @@ use warnings FATAL => qw(uninitialized);
 use lib '.';    #add current dir if not already there
 use scan_database;    #See https://www.mythtv.org/wiki/Perl_API_examples
 
-my $version='2.26  24 March 2021';
+my $version='2.27  4 Jun 2022';
 my $regressiontest=0;      #developer switch (old export format)
 
 
@@ -65,7 +69,7 @@ my $regressiontest=0;      #developer switch (old export format)
 #Allow wildcarding in xmltv import and CreateSDConfig
 
 #28July 2016
-#quit scan of xml files if you meet '<programme'.  makes it lots faster.
+#quit scan of xml /Channel/GetVideoSourceList'files if you meet '<programme'.  makes it lots faster.
 #now version 2.02
 
 #30July 2016 version 2.03
@@ -222,6 +226,12 @@ my $regressiontest=0;      #developer switch (old export format)
 #  String values are 'Not Visible' or 'Visible'
 #  Added code to set this property to match property 'Visible' in sub  ModifyChannel
 #  Version 2.26
+
+#4 June 2022.  Testing against port 6744 of Mythtv v32 in preparation for v33.
+#   replaced erroneous /Channel/VideoSourceList with /Channel/GetVideoSourceList in InterrogateBackend
+#   scan_database.pm changes needed - updated to 1.12.
+#   Version 2.27.
+
 
 my $XMLTVname='CallSign';    # Change this to 'ChannelName' if you want to match XMLTVIDs
                              # against that rather than 'CallSign'.
@@ -2769,7 +2779,17 @@ sub CreateSDConfig{
     postmortem($@) if ($@);
 }
 
-
+sub Invalid_scan_database{
+	#check whether scandatabase is too old.
+	my $scanv=$scan_database::VERSION;
+	mylog(0,"scan_database version $scanv");
+	if ($scanv > 1.11){return 0};
+	if ($backend =~ /:6744/){return 1};
+	$mythversion =~ m!^(0\.)?(\d\d)!;
+	mylog(0,"2 digit mythtv version=$2");
+	if ($2<33){return 0};
+	return 1;
+}
 
 #-------  Read backend --------
 
@@ -2782,10 +2802,16 @@ sub InterrogateBackend{
         my $videosource; my %header; my $temp;
         track('VideoSourceList');
         $temp=&ReadDiagnostics('sources');
-        ReadBackend($backend. '/Channel/VideoSourceList', $temp) unless (defined $spoof);
+        ReadBackend($backend. '/Channel/GetVideoSourceList', $temp) unless (defined $spoof);
 
         if ($temp =~ m!<Version>(.*)</Version>!){$mythversion=$1};
         mylog(0, "MythTV version $mythversion");
+        print "version $mythversion\n";
+        if (Invalid_scan_database){
+			mylog(1,'scan_database needs upgrade');
+			exit 1;
+		}
+		mylog(0,'scan_database version ok');
         
         my $reply=FillHashofHash(%sources, $temp, 'VideoSource', 'Id', 'SourceName');
         mylog(0,"Found $reply video sources");    
@@ -2902,7 +2928,7 @@ sub InvalidExtra{
 sub Version{
     my $out= "MythTV Channel Editor\nVersion $version";
     $out .= "\n\nGPL license conditions\n\n";
-    $out .= "Phil Brady 2016~2021\n\nContact via:\nPhilB at MythTV Forum\n";
+    $out .= "Phil Brady 2016~2022\n\nContact via:\nPhilB at MythTV Forum\n";
     $out .= 'or phil dot brady@hotmail dot co dot uk';
     #$out =~ s/dot/./g;
     SimpleBox($out);
