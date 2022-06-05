@@ -1,13 +1,21 @@
-This repository holds the files for a MythTV channel editor.
+This repository holds files for the perl based Mythtv channel editor.
 
-Files are:
-
-chedit2.pl         version 2.25   (2 May 2018).
-scan_database.pm   a supporting perl module
-tutorial.diags     Sample UK data to allow the tutorial.
-chedit.pl          Obsolete version 1.  Please use chedit2.
-
-Full details and documentation can be found in the mythTV wiki at:
-
+Full details are in the wiki at:
 https://www.mythtv.org/wiki/Channel_Editor
 
+The files are:
+
+chedit2.pl         version 2.27 updated 5 June 2022
+tutorial.diags     Sample UK data to allow the tutorial.
+
+This code also needs the perl module scan_database.pm obtainable from
+https://www.mythtv.org/wiki/Perl_API_examples.
+
+Note that changes to both chedit2.pl and scan_database.pm were made in
+June 2022 to suit the new test API interface on port 6744 of Mythtv 
+version 32 so the code should be compatible with v33.
+
+These files are OBSOLETE and should not be used.  (how can I delete them??)
+
+scan_database.pm   OBSOLETE
+chedit.pl          OBSOLETE   
